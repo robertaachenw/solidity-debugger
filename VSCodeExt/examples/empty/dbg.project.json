@@ -1,0 +1,6 @@
+{
+    "contractsDir": "contracts-dbg",
+    "autoOpen": true,
+    "breakOnEntry": true,
+    "selectedContract": "basicTest"
+}

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Settings</title>
+    <!--HEAD-->
+</head>
+
+<body id="webview-body">
+<h2>Project Settings</h2>
+<vscode-divider></vscode-divider>
+<br>
+
+<table>
+    <tr>
+        <td>
+            <vscode-text-field id="inputProjectRoot" size="100" readonly>Project Root</vscode-text-field>
+        </td>
+    </tr>
+
+    <tr>
+        <td>
+            <table>
+                <tr>
+                    <td>
+                        <p>Test Contract: </p>
+                    </td>
+                    <td>
+                        <vscode-dropdown id="dropdownContractNames" position="below">
+                            <!--                                <vscode-option>(global defaults)</vscode-option>-->
+                            <!--DROPDOWN_CONTRACT_NAMES-->
+                        </vscode-dropdown>
+                    </td>
+                    <td>
+                        <vscode-button id="buttonAddTest" appearance="secondary">
+                            Add Test Contract...
+                        </vscode-button>
+                    </td>
+                    <td>
+                        <vscode-button id="buttonRemoveTest" appearance="secondary">
+                            Remove Test Contract
+                        </vscode-button>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+
+<vscode-divider></vscode-divider>
+
+<vscode-panels aria-label="Default">
+    <vscode-panel-tab id="tab-1">Compiler</vscode-panel-tab>
+    <vscode-panel-tab id="tab-2">Debugger</vscode-panel-tab>
+
+    <!-- "Compiler" tab -->
+    <vscode-panel-view id="view-1">
+        <table>
+            <tr>
+                <td>
+                    <table>
+                        <tr>
+                            <td>
+                                <p>Solidity Version: </p>
+                            </td>
+                            <td>
+                                <vscode-dropdown id="dropdownSolVer" position="below">
+                                    <!--DROPDOWN_SOLIDITY_VERSIONS-->
+                                </vscode-dropdown>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                Additional Source Directories:<br>
+                                <i>relative to project root</i>
+                            </td>
+                            <td>
+                                <vscode-text-area id="inputSourceDirs" resize="both" cols="60"
+                                                  rows="3"></vscode-text-area>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <u>Pre-Build Steps:</u>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td></td>
+                            <td>
+                                <vscode-data-grid id="gridPreBuildSteps" aria-label="Basic"
+                                                  grid-template-columns="1fr 1fr 80px">
+                                    <vscode-data-grid-row>
+                                        <vscode-data-grid-cell grid-column="1"><b>Command Line</b>
+                                        </vscode-data-grid-cell>
+                                        <vscode-data-grid-cell grid-column="2"><b>Expected Output</b>
+                                        </vscode-data-grid-cell>
+                                        <vscode-data-grid-cell grid-column="3"></vscode-data-grid-cell>
+                                    </vscode-data-grid-row>
+                                </vscode-data-grid>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td></td>
+                            <td>
+                                <vscode-divider></vscode-divider>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                Shell Command:
+                            </td>
+                            <td>
+                                <vscode-text-field id="inputPreBuildCmdline" size="60"></vscode-text-field>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                Expected Output (optional):
+                            </td>
+                            <td>
+                                <vscode-text-field id="inputPreBuildExpectedOutput" size="60"></vscode-text-field>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td></td>
+                            <td>
+                                <vscode-button id="buttonPreBuildAddStep" appearance="secondary">Add</vscode-button>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td></td>
+                            <td>
+                                <vscode-divider></vscode-divider>
+                            </td>
+                        </tr>
+
+                        <tr></tr>
+                        <tr></tr>
+                    </table>
+                </td>
+            </tr>
+
+            <tr></tr>
+
+            <tr>
+                <td>
+                    <!--<vscode-data-grid id="gridPreBuildSteps" aria-label="Basic">-->
+                </td>
+            </tr>
+        </table>
+    </vscode-panel-view>
+
+    <!-- "Debugger" tab -->
+    <vscode-panel-view id="view-2">
+        <table>
+            <tr>
+                <td>
+                    <table>
+                        <tr>
+                            <td><u>Behavior</u></td>
+                            <td>
+                                <vscode-checkbox id="chkBreakOnEntry">Break On Entry</vscode-checkbox><br>
+                                <vscode-checkbox id="chkVerbose">Show Storage Access (Verbose)</vscode-checkbox>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>Entry Point:</td>
+                            <td>
+                                <vscode-text-field id="inputEntryPoint" size="60"></vscode-text-field>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <u>Forking:</u>
+                            </td>
+                            <td>
+                                <vscode-checkbox id="chkFork">Enabled</vscode-checkbox>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                Ethereum RPC URL:
+                            </td>
+                            <td>
+                                <vscode-text-field id="inputForkUrl" size="60"></vscode-text-field>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                Block Number (optional):
+                            </td>
+                            <td>
+                                <vscode-text-field id="inputForkBlock" size="60"></vscode-text-field>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td><u>Hardhat Integration</u></td>
+                            <td>
+                                <vscode-checkbox id="chkHardhat">Import Debug Symbols from Hardhat Project
+                                </vscode-checkbox>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>Hardhat Project Root Directory</td>
+                            <td>
+                                <vscode-text-field id="inputHardhatPath" size="60"></vscode-text-field>
+                            </td>
+                        </tr>
+
+
+                        <tr>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <u>Pre-Debug Steps:</u>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td></td>
+                            <td>
+                                <vscode-data-grid id="gridPreDebugSteps" aria-label="Basic"
+                                                  grid-template-columns="1fr 1fr 80px">
+                                    <vscode-data-grid-row>
+                                        <vscode-data-grid-cell grid-column="1"><b>Command Line</b>
+                                        </vscode-data-grid-cell>
+                                        <vscode-data-grid-cell grid-column="2"><b>Expected Output</b>
+                                        </vscode-data-grid-cell>
+                                        <vscode-data-grid-cell grid-column="3"></vscode-data-grid-cell>
+                                    </vscode-data-grid-row>
+                                </vscode-data-grid>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td></td>
+                            <td>
+                                <vscode-divider></vscode-divider>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                Shell Command:
+                            </td>
+                            <td>
+                                <vscode-text-field id="inputPreDebugCmdline" size="60"></vscode-text-field>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                Expected Output (optional):
+                            </td>
+                            <td>
+                                <vscode-text-field id="inputPreDebugExpectedOutput" size="60"></vscode-text-field>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td></td>
+                            <td>
+                                <vscode-button id="buttonPreDebugAddStep" appearance="secondary">Add</vscode-button>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td></td>
+                            <td>
+                                <vscode-divider></vscode-divider>
+                            </td>
+                        </tr>
+
+                        <tr></tr>
+                        <tr></tr>
+                    </table>
+                </td>
+            </tr>
+            <tr></tr>
+        </table>
+    </vscode-panel-view>
+
+</vscode-panels>
+
+<table>
+    <tr>
+        <td>
+            <vscode-button id="buttonSave" appearance="primary">OK</vscode-button>
+        </td>
+        <td>
+            <vscode-button id="buttonCancel" appearance="secondary">Cancel</vscode-button>
+        </td>
+        <td>
+            <vscode-button id="buttonApply" appearance="secondary">Apply</vscode-button>
+        </td>
+    </tr>
+</table>
+
+</body>
+
+</html>

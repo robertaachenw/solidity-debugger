@@ -1,0 +1,16 @@
+{
+  "name": "Meadow.VSCode.Common",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "@types/big.js": "^6.1.6",
+    "@types/targz": "^1.0.1",
+    "@types/yauzl-promise": "^2.1.1",
+    "big.js": "^6.2.1",
+    "nodejs-file-downloader": "^4.10.6",
+    "supports-color": "^9.3.1",
+    "targz": "^1.0.1",
+    "yauzl-promise": "^2.1.3"
+  }
+}

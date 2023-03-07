@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
+		<NoWarn>$(NoWarn);NU1605</NoWarn>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Meadow.JsonRpc.Server\Meadow.JsonRpc.Server.csproj" />
+    <ProjectReference Include="..\Meadow.EVM\Meadow.EVM.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="microsoft.clearscript.v8" Version="7.3.7" />
+    <PackageReference Include="microsoft.clearscript.v8.icudata" Version="7.3.7" />
+    <PackageReference Include="microsoft.clearscript.v8.native.linux-arm" Version="7.3.7" />
+    <PackageReference Include="microsoft.clearscript.v8.native.linux-arm64" Version="7.3.7" />
+    <PackageReference Include="microsoft.clearscript.v8.native.linux-x64" Version="7.3.7" />
+    <PackageReference Include="microsoft.clearscript.v8.native.osx-arm64" Version="7.3.7" />
+    <PackageReference Include="microsoft.clearscript.v8.native.osx-x64" Version="7.3.7" />
+    <PackageReference Include="microsoft.clearscript.v8.native.win-arm64" Version="7.3.7" />
+    <PackageReference Include="microsoft.clearscript.v8.native.win-x64" Version="7.3.7" />
+    <PackageReference Include="microsoft.clearscript.v8.native.win-x86" Version="7.3.7" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Meadow.Shared\Meadow.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,11 @@
+.env
+coverage
+coverage.json
+typechain
+typechain-types
+cache
+artifacts-dbg
+contracts-dbg/sdbg.log
+node_modules/.package-lock.json
+package-lock.json
+.ignore7z

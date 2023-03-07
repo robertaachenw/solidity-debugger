@@ -1,0 +1,319 @@
+{
+    "name": "solidity-debugger-pro",
+    "displayName": "Solidity Debugger Pro",
+    "version": "2023.3.14",
+    "publisher": "robertaachenw",
+    "description": "Standalone debugger for Solidity",
+    "author": {
+        "name": "Robert Aachen"
+    },
+    "license": "MIT",
+    "keywords": [
+        "solidity",
+        "debugger",
+        "hardhat",
+        "evm"
+    ],
+    "engines": {
+        "vscode": "^1.66.0"
+    },
+    "icon": "images/sdsw.png",
+    "categories": [
+        "Debuggers"
+    ],
+    "private": true,
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/robertaachenw/solidity-debugger.git"
+    },
+    "bugs": {
+        "url": "https://github.com/robertaachenw/solidity-debugger/issues"
+    },
+    "scripts": {
+        "compile": "tsc -p ./",
+        "lint": "eslint src --ext ts",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "esbuild-base": "esbuild ./src/extension.ts --bundle --tsconfig=./tsconfig.json --external:vscode --format=cjs --platform=node --outfile=dist/extension.js",
+        "esbuild": "esbuild ./src/extension.ts --bundle --tsconfig=./tsconfig.json --external:vscode --format=cjs --platform=node --outfile=dist/extension.js",
+        "watch": "npm run -S esbuild-base -- --sourcemap --sources-content=false --watch",
+        "build": "npm run -S esbuild-base -- --sourcemap --sources-content=false && npm run -S esbuild -- --sourcemap --sources-content=false",
+        "package": "vsce package",
+        "publish": "vsce publish",
+        "publish-pre-release": "vsce publish --pre-release",
+        "engine-inst": "cd src/installers/engine && node node_modules/webpack/bin/webpack.js --no-watch && cd ../../../ && rimraf portable/engine.js.map portable/engine.js.LICENSE.txt",
+        "solidity-inst": "cd src/installers/solidity && node node_modules/webpack/bin/webpack.js --no-watch && cd ../../../ && rimraf portable/solidity.js.LICENSE.txt portable/solidity.js.map",
+        "vscode:prepublish": "rimraf dist && npm run -S esbuild-base -- --minify && npm run -S engine-inst && npm run -S solidity-inst",
+        "test": "npm run typecheck"
+    },
+    "devDependencies": {
+        "@types/glob": "^8.1.0",
+        "@types/mocha": "^10.0.1",
+        "@types/node": "^18.14.6",
+        "@types/uuid": "^9.0.1",
+        "@types/vscode": "^1.66.0",
+        "@typescript-eslint/eslint-plugin": "^5.54.1",
+        "@typescript-eslint/parser": "^5.54.1",
+        "@vscode/debugadapter": "^1.59.0",
+        "@vscode/debugadapter-testsupport": "^1.59.0",
+        "await-notify": "^1.0.1",
+        "base64-js": "^1.5.1",
+        "esbuild": "^0.17.11",
+        "eslint": "^8.35.0",
+        "events": "^3.3.0",
+        "glob": "^9.2.1",
+        "mocha": "^10.2.0",
+        "moment": "^2.29.4",
+        "path-browserify": "^1.0.1",
+        "rimraf": "^4.3.1",
+        "typescript": "^4.9.5",
+        "url": "^0.11.0",
+        "vscode-test": "^1.5.0"
+    },
+    "main": "./dist/extension.js",
+    "activationEvents": [
+        "onStartupFinished",
+        "onDebugResolve:mock",
+        "onDebugDynamicConfigurations:mock",
+        "onCommand:extension.solidity-ide.getProgramName",
+        "onCommand:extension.solidity-ide.runEditorContents",
+        "onCommand:sdbg.debugInternal",
+        "onView:sdbg.sdsMainMenu",
+        "workspaceContains:dbg.project.json"
+    ],
+    "workspaceTrust": {
+        "request": "never"
+    },
+    "contributes": {
+        "menus": {
+            "editor/title": [
+                {
+                    "command": "sdbg.debug",
+                    "when": "resourceLangId == solidity",
+                    "group": "navigation@0"
+                },
+                {
+                    "command": "sdbg.build",
+                    "when": "resourceLangId == solidity",
+                    "group": "navigation@1"
+                },
+                {
+                    "command": "sdbg.nop",
+                    "when": "resourceLangId == solidity",
+                    "group": "navigation@2"
+                },
+                {
+                    "command": "sdbg.selectContract",
+                    "when": "resourceLangId == solidity",
+                    "group": "navigation@3"
+                },
+                {
+                    "command": "sdbg.newTest",
+                    "when": "resourceLangId == solidity",
+                    "group": "navigation@4"
+                },
+                {
+                    "command": "sdbg.projectSettings",
+                    "when": "resourceLangId == solidity",
+                    "group": "navigation@5"
+                },
+                {
+                    "command": "sdbg.nop",
+                    "when": "resourceLangId == solidity",
+                    "group": "navigation@6"
+                }
+            ],
+            "commandPalette": [
+                {
+                    "command": "sdbg.debugInternal",
+                    "when": "resourceLangId == solidity"
+                },
+                {
+                    "command": "extension.solidity-ide.runEditorContents",
+                    "when": "resourceLangId == solidity"
+                }
+            ],
+            "debug/variables/context": [
+                {
+                    "command": "extension.solidity-ide.toggleFormatting",
+                    "when": "debugType == 'mock' && debugProtocolVariableMenuContext == 'simple'"
+                }
+            ]
+        },
+        "commands": [
+            {
+                "command": "sdbg.nop",
+                "title": "Menu",
+                "category": "Solidity Debugger",
+                "icon": "$(blank)"
+            },
+            {
+                "command": "sdbg.projectSettings",
+                "title": "Project Settings",
+                "category": "Solidity Debugger",
+                "icon": "$(settings-gear)"
+            },
+            {
+                "command": "sdbg.build",
+                "title": "Build Debug Target",
+                "category": "Solidity Debugger",
+                "icon": "$(layers)"
+            },
+            {
+                "command": "sdbg.newTest",
+                "title": "Create Debug Target",
+                "category": "Solidity Debugger",
+                "icon": "$(add)"
+            },
+            {
+                "command": "sdbg.selectContract",
+                "title": "Select Debug Target",
+                "category": "Solidity Debugger",
+                "icon": "$(list-selection)"
+            },
+            {
+                "command": "sdbg.debug",
+                "title": "Debug Contract",
+                "category": "Solidity Debugger",
+                "icon": "$(debug-alt)"
+            },
+            {
+                "command": "sdbg.debugInternal",
+                "title": "Debug File",
+                "category": "Solidity Debugger",
+                "enablement": "!inDebugMode",
+                "icon": "$(debug-alt)"
+            },
+            {
+                "command": "extension.solidity-ide.runEditorContents",
+                "title": "Run File",
+                "category": "Solidity Debugger",
+                "enablement": "!inDebugMode",
+                "icon": "$(play)"
+            },
+            {
+                "command": "extension.solidity-ide.toggleFormatting",
+                "title": "Toggle between decimal and hex formatting"
+            }
+        ],
+        "breakpoints": [
+            {
+                "language": "solidity"
+            }
+        ],
+        "debuggers": [
+            {
+                "type": "mock",
+                "languages": [
+                    "solidity"
+                ],
+                "label": "Solidity Debugger",
+                "program": "./out/debugAdapter.js",
+                "runtime": "node",
+                "configurationAttributes": {
+                    "launch": {
+                        "required": [
+                            "program"
+                        ],
+                        "properties": {
+                            "program": {
+                                "type": "string",
+                                "description": "Absolute path to a text file.",
+                                "default": "${workspaceFolder}/${command:AskForProgramName}"
+                            },
+                            "stopOnEntry": {
+                                "type": "boolean",
+                                "description": "Automatically stop after launch.",
+                                "default": true
+                            },
+                            "trace": {
+                                "type": "boolean",
+                                "description": "Enable logging of the Debug Adapter Protocol.",
+                                "default": true
+                            },
+                            "compileError": {
+                                "type": "string",
+                                "description": "Simulates a compile error in 'launch' request.",
+                                "enum": [
+                                    "default",
+                                    "show",
+                                    "hide"
+                                ],
+                                "enumDescriptions": [
+                                    "default: show fake compile error to user",
+                                    "show fake compile error to user",
+                                    "do not show fake compile error to user"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "initialConfigurations": [
+                    {
+                        "type": "mock",
+                        "request": "launch",
+                        "name": "Ask for file name",
+                        "program": "${workspaceFolder}/${command:AskForProgramName}",
+                        "stopOnEntry": true
+                    }
+                ],
+                "configurationSnippets": [
+                    {
+                        "label": "Solidity Debugger: Launch",
+                        "description": "A new configuration for 'debugging' a user selected solidity file.",
+                        "body": {
+                            "type": "mock",
+                            "request": "launch",
+                            "name": "Ask for file name",
+                            "program": "^\"\\${workspaceFolder}/\\${command:AskForProgramName}\"",
+                            "stopOnEntry": true
+                        }
+                    }
+                ],
+                "variables": {
+                    "AskForProgramName": "extension.solidity-ide.getProgramName"
+                }
+            }
+        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "sds",
+                    "title": "Solidity Development Environment",
+                    "icon": "images/sdsw.png"
+                }
+            ]
+        },
+        "views": {
+            "sds": [
+                {
+                    "id": "sdbg.sdsMainMenu",
+                    "name": "root",
+                    "type": "tree",
+                    "visibility": "visible"
+                }
+            ]
+        },
+        "viewsWelcome": [
+            {
+                "view": "sdbg.sdsMainMenu",
+                "contents": "[$(add) New Target](command:sdbg.newProject)\n[$(folder-opened) Open Existing Target](command:sdbg.openProject)\n\u00b7\nCurrent project\n[$(debug-alt) Debug](command:sdbg.debug)\n[$(add) New Test](command:sdbg.newTest)\n[$(settings-gear) Settings](command:sdbg.projectSettings)\n\u00b7\nDocumentation\n[$(book) Docs](command:sdbg.docs)\n\u00b7\nMaintenance\n[$(arrow-down) Check for updates](command:sdbg.update)"
+            }
+        ]
+    },
+    "dependencies": {
+        "@supercharge/filesystem": "^2.3.0",
+        "@supercharge/fs": "^3.4.0",
+        "@types/deep-diff": "^1.0.2",
+        "@types/ignore-walk": "^4.0.0",
+        "@types/open": "^6.2.1",
+        "@types/require-from-string": "^1.2.1",
+        "@vscode/webview-ui-toolkit": "^1.2.2",
+        "deep-diff": "^1.0.2",
+        "ignore-walk": "^6.0.1",
+        "nodejs-file-downloader": "^4.10.6",
+        "open": "^8.4.2",
+        "promisify-child-process": "^4.1.1",
+        "replace-string": "^4.0.0",
+        "require-from-string": "^2.0.2"
+    }
+}

@@ -1,0 +1,7 @@
+GeneratedAssembly
+GeneratedContracts
+node_modules/.yarn-integrity
+yarn.lock
+yarn-error.log
+artifacts-dbg
+.ignore7z

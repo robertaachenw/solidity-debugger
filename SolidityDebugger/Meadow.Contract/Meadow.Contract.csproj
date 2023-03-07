@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
+		<NoWarn>$(NoWarn);NU1605</NoWarn>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="PeterO.Cbor" Version="4.5.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Meadow.JsonRpc.Client\Meadow.JsonRpc.Client.csproj" />
+  </ItemGroup>
+
+</Project>

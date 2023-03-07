@@ -1,0 +1,34 @@
+{
+    "contractsDir": "contracts-dbg",
+    "selectedContract": "LockTest",
+    "autoOpen": true,
+    "breakOnEntry": true,
+    "preDebugSteps": [
+        {
+            "cmdline": "npx hardhat node --port 23074",
+            "expectedOutput": "private keys, are publicly known"
+        },
+        {
+            "cmdline": "npx hardhat run scripts/deploy.ts --network local_23074",
+            "expectedOutput": "deployed to 0x5FbDB2315678afecb367f032d93F642f64180aa3"
+        }
+    ],
+    "preBuildSteps": [
+        {
+            "cmdline": "npx hardhat compile --force",
+            "expectedOutput": "Solidity files successfully"
+        }
+    ],
+    "fork": {
+        "enable": true,
+        "url": "http://127.0.0.1:23074/",
+        "blockNumber": 0
+    },
+    "symbols": {
+        "hardhat": {
+            "projectPaths": [
+                "."
+            ]
+        }
+    }
+}

@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <GeneratePackageOnBuild Condition="'$(Configuration)' == 'Release'">true</GeneratePackageOnBuild>
+		<NoWarn>$(NoWarn);NU1605</NoWarn>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Portable.BouncyCastle" Version="1.8.4" />
+    <PackageReference Include="Secp256k1.Net" Version="0.1.52" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Meadow.Core\Meadow.Core.csproj" />
+    <ProjectReference Include="..\Meadow.JsonRpc.Client\Meadow.JsonRpc.Client.csproj" />
+    <ProjectReference Include="..\Meadow.Plugin\Meadow.Plugin.csproj" />
+    <ProjectReference Include="..\Meadow.Shared\Meadow.Shared.csproj" />
+  </ItemGroup>
+
+</Project>
