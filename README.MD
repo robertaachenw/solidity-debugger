@@ -1,7 +1,7 @@
 # Solidity Debugger Pro for Visual Studio Code
 [Solidity Debugger Pro](https://soliditydebugger.org/) (sdbg) is a VS Code extension that adds feature-rich debugging capabilities for Solidity projects. It supports all EVM-compatible blockchains, allowing developers to easily debug smart contracts locally or on a forked node. 
 
-Solidity Debugger Pro brings native debugging support for the popular [Hardhat framework](https://hardhat.org/).
+<img src="images/hardhat-logo-small.png" alt="hardhat-logo-small.png" /> Solidity Debugger Pro brings native debugging support for the popular [Hardhat framework](https://hardhat.org/).
 
 This project is based on the unmaintained [Meadow Suite](https://github.com/MeadowSuite/Meadow).
 
