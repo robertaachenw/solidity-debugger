@@ -7,7 +7,7 @@ This project is based on the unmaintained [Meadow Suite](https://github.com/Mead
 
 ## Installation Instructions
 
-[Get it from the marketplace!](https://marketplace.visualstudio.com/items?itemName=robertaachenw.solidity-debugger)
+[Get it from the marketplace!](https://marketplace.visualstudio.com/items?itemName=robertaachenw.solidity-debugger-pro)
 
 ## Features
 
