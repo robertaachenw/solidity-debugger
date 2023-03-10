@@ -3,6 +3,7 @@ import {Uri, Webview} from "vscode";
 import {dateFormat, openProjectCommandName} from "./consts";
 import {ProjectHistory} from "./ProjectHistory";
 import moment = require("moment");
+import {Tools} from "./Tools";
 
 const newProjectWebViewName = 'sdbg.openProject.webView';
 const newProjectTabTitle = 'Open Project';
@@ -120,6 +121,8 @@ class OpenProjectBase {
         vscode.commands.registerCommand(
             openProjectCommandName,
             () => {
+                Tools.isInstalled(true);
+
                 this._window = vscode.window.createWebviewPanel(
                     newProjectWebViewName,
                     newProjectTabTitle,

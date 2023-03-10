@@ -20,7 +20,7 @@ import {
     contractJsonFileName,
     contractsDirName,
     entryPointContractName,
-    entryPointContractTemplate,
+    entryPointContractTemplate, hardhatConfigJs, hardhatConfigTs,
     newProjectCommandName,
     ProjectJson,
     projectJsonFileName
@@ -236,6 +236,8 @@ class NewProjectBase {
         vscode.commands.registerCommand(
             newProjectCommandName,
             () => {
+                Tools.isInstalled(true);
+
                 this._window = vscode.window.createWebviewPanel(
                     newProjectWebViewName,
                     newProjectTabTitle,
@@ -281,13 +283,13 @@ class NewProjectBase {
             return false;
         }
 
-        if (!fs.existsSync(path.join(projectPath, "hardhat.config.ts")) && !fs.existsSync(path.join(projectPath, "hardhat.config.js"))) {
+        if (!fs.existsSync(path.join(projectPath, hardhatConfigTs)) && !fs.existsSync(path.join(projectPath, hardhatConfigJs))) {
             vscode.window.showErrorMessage("Not a hardhat project path. could not find hardhat.config.[ts|js]");
             return false;
         }
 
         // check if global json file already exists
-        if (fs.existsSync(path.join(projectPath, "dbg.project.json"))) {
+        if (fs.existsSync(path.join(projectPath, projectJsonFileName))) {
             vscode.window.showErrorMessage("Debug target already initialized in this project. use Open Existing Target instead.");
             this._window!.dispose();
             this._window = undefined;
@@ -339,9 +341,9 @@ class NewProjectBase {
     }
 
     private async onCreateProjectClick(message: IGuiContent, where: CreateProjectLocation): Promise<void> {
-        if (this._window === undefined) {
-            return;
-        }
+        // if (this._window === undefined) {
+        //     return;
+        // }
 
         // sanity checks
         let projectName = message.projectName;
@@ -432,7 +434,7 @@ class NewProjectBase {
         }
 
         // close project creation tab
-        this._window.dispose();
+        this._window?.dispose();
         this._window = undefined;
 
         // download project template
@@ -500,6 +502,16 @@ class NewProjectBase {
 
         // open newly created project
         CmdOpenProject.openProject(projectPath);
+    }
+
+    async createFromCurrentHardhatProject(projectName: string)
+    {
+        await this.onMessage({
+            sender: buttonCreateProject,
+            activePanel: radioInitHere,
+            projectName: projectName,
+            solidityVersion: Tools.solidity.defaultVersion
+        });
     }
 
     /**

@@ -56,6 +56,8 @@ class ProjectSettingsBase {
         this._extension = context;
 
         vscode.commands.registerCommand(projectSettingsCommandName, () => {
+            Tools.isInstalled(true);
+
             this._window = vscode.window.createWebviewPanel(projectSettingsWebViewName, projectSettingsTabTitle, vscode.ViewColumn.One, {
                 enableScripts: true,
             });

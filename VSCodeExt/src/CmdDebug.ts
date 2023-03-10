@@ -1,20 +1,30 @@
 import * as vscode from 'vscode';
-import {CancellationToken, DebugConfiguration, ProviderResult, WorkspaceFolder} from 'vscode';
-import {debugCommandName, errNoOpenProject, showSideBarCommandName} from './consts';
+import {CancellationToken, DebugConfiguration, ProviderResult, workspace, WorkspaceFolder} from 'vscode';
+import {
+    debugCommandName, errNoOpenProject, hardhatConfigJs, hardhatConfigTs, productName, showSideBarCommandName
+} from './consts';
 import {MockDebugSession} from './mockDebug';
 import {FileAccessor} from './mockRuntime';
 import {OutputWindow} from './OutputWindow';
-import {Project} from './Project';
+import {Project, SdbgProject} from './Project';
 import {ProjectHistory} from './ProjectHistory';
 import {Tools} from './Tools';
 import {StatusBar} from "./StatusBar";
+import * as path from "path";
+import * as fs from 'fs';
+import {TUTORIAL_URL} from "./common/hardcodedURLs";
+import {CmdNewProject} from "./CmdNewProject";
+
+const open = require('open');
 
 /** vscode command 'sdbg.debug' */
 async function vscDebug(context: vscode.ExtensionContext, resource: vscode.Uri) {
+    if (!Tools.isInstalled(true)) {
+        return;
+    }
+
     if (!ProjectHistory.updateByWorkspace()) {
-        // no open project
-        vscode.commands.executeCommand(showSideBarCommandName);
-        OutputWindow.write(errNoOpenProject, true);
+        await handleNoSdbgProject();
         return;
     }
 
@@ -40,6 +50,43 @@ async function vscDebug(context: vscode.ExtensionContext, resource: vscode.Uri) 
             // ...continues in DebugAdapterExecutableFactory
         }
     });
+}
+
+
+function getCurrentHardhatProject(): string | undefined {
+    let result: string | undefined = undefined;
+
+    vscode.workspace.workspaceFolders?.forEach((workspace: vscode.WorkspaceFolder) => {
+        let openFolder = workspace.uri.fsPath;
+
+        if (fs.existsSync(path.join(openFolder, hardhatConfigTs)) || fs.existsSync(path.join(openFolder, hardhatConfigJs))) {
+            result = openFolder;
+        }
+    });
+
+    return result;
+}
+
+
+export async function handleNoSdbgProject() {
+    let curHardhatProject = getCurrentHardhatProject();
+
+    if (curHardhatProject !== undefined) {
+        let hhName = path.basename(curHardhatProject);
+        vscode.window.showInformationMessage(`Add new test to ${hhName}?`, 'Yes', 'No').then(response => {
+            if (response === 'Yes') {
+                CmdNewProject.createFromCurrentHardhatProject(hhName);
+            }
+        });
+        return;
+    } else {
+        vscode.commands.executeCommand(showSideBarCommandName);
+        vscode.window.showInformationMessage(`Workspace folder must contain either a Hardhat or ${productName} project. Would you like to see the documentation?`, 'Yes', 'No').then(response => {
+            if (response === 'Yes') {
+                open(TUTORIAL_URL);
+            }
+        });
+    }
 }
 
 
@@ -142,7 +189,14 @@ class MockConfigurationProvider implements vscode.DebugConfigurationProvider {
 
         const editor = vscode.window.activeTextEditor;
         if (!editor?.document.fileName.includes(".t.sol")) {
-            vscode.window.showErrorMessage("Can only debug Test files (.t.sol)")
+            if (!Project.current) {
+                handleNoSdbgProject();
+                return;
+            }
+            else {
+                vscode.commands.executeCommand(debugCommandName);
+                // vscode.window.showErrorMessage("Can only debug Test files (.t.sol)");
+            }
             return undefined;
         }
 

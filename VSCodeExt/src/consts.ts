@@ -7,6 +7,9 @@ export const projectJsonFileName = 'dbg.project.json';
 export const contractsDirName = 'contracts-dbg';
 export const contractJsonFileName = 'dbg.contract.json';
 
+export const hardhatConfigTs = 'hardhat.config.ts';
+export const hardhatConfigJs = 'hardhat.config.js';
+
 export const entryPointContractName = 'DbgEntry';
 export const entryPointFullName = `${entryPointContractName}`;
 export const entryPointContractTemplate = `// SPDX-License-Identifier: MIT
@@ -22,7 +25,7 @@ contract ${entryPointContractName} {
         //  Counter counter = new Counter();
         //  counter.increment();
 
-        // or interact with an existing deployment by specifying a \`fork\` url in \`dbg.project.json\`
+        // or interact with an existing deployment by specifying a \`fork\` url in \`${projectJsonFileName}\`
         // eg:
         //  ICounter counter = ICounter(0x12345678.....)
         //  counter.increment(); 
@@ -54,8 +57,8 @@ export const showSideBarCommandName = 'sdbg.sdsMainMenu.focus';
 
 export const errNoOpenProject = `${productName}: No open project. Please open a project first.`;
 export const errNoSelectedContract = `${productName}: No contract selected. Please select an entry-point contract for the debugger. See button at the bottom of the window.`;
-
-
+export const errInstallInProgress = `${productName} is being installed...`;
+export const errInstallRequiresRestart = `${productName}: Please restart VS Code to complete installation`;
 export interface ContractJsonFork {
     enable: boolean
     url: string

@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import {newTestCommandName} from './consts';
 import {Project} from './Project';
+import {Tools} from "./Tools";
 
 async function AddNewTest(testName: string) {
     if (!Project.current) {
@@ -19,6 +20,8 @@ class CmdNewTestBase {
     init(context: vscode.ExtensionContext) {
         this._extension = context;
         vscode.commands.registerCommand(newTestCommandName, async () => {
+            Tools.isInstalled(true);
+
             if (!Project.current) {
                 return;
             }
@@ -34,7 +37,7 @@ class CmdNewTestBase {
                 return;
             }
 
-            AddNewTest(cname);
+            await AddNewTest(cname);
             vscode.commands.executeCommand("workbench.files.action.focusFilesExplorer");
         });
     }

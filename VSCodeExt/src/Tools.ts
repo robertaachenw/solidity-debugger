@@ -2,19 +2,17 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as util from 'util';
+import * as properLockFile from 'proper-lockfile';
 import {IEngineInstaller} from './common/IEngineInstaller';
 import {ISolcInstaller} from './common/ISolcInstaller';
 import {CacheFlag, DownloadCache} from './common/DownloadCache';
 import {
-    GITHUB_WEBINST_ENGINE_URL,
-    GITHUB_WEBINST_SOLIDITY_URL,
-    HOMEPAGE_JSON_URL,
-    IReleaseJson,
-    PORTABLE_DIR
+    GITHUB_WEBINST_ENGINE_URL, GITHUB_WEBINST_SOLIDITY_URL, HOMEPAGE_JSON_URL, IReleaseJson, PORTABLE_DIR
 } from './common/hardcodedURLs';
 import {sformat} from './common/common';
 import {WebInstallerOptions} from "./common/IWebInstaller";
-import {updateIntervalMilliseconds} from "./consts";
+import {errInstallRequiresRestart, errInstallInProgress, updateIntervalMilliseconds} from "./consts";
+import {APPHOME_NAME_INSTALL, APPHOME_NAME_UPDATE, apphomeMkdir} from "./common/apphome";
 
 interface WebInstallers {
     engineInstaller: IEngineInstaller
@@ -25,9 +23,11 @@ class ToolsBase {
     private _extension?: vscode.ExtensionContext;
     private _engineInstaller?: IEngineInstaller;
     private _solcInstaller?: ISolcInstaller;
+    private _installDone: boolean;
     private _init: boolean;
 
     constructor() {
+        this._installDone = false;
         this._init = false;
     }
 
@@ -49,53 +49,74 @@ class ToolsBase {
         let engineInstaller: IEngineInstaller | undefined = undefined;
         let solcInstaller: ISolcInstaller | undefined = undefined;
 
-        await DownloadCache.getFileAsync(
-            HOMEPAGE_JSON_URL,
-            flags,
-            undefined,
-            async (url: string, localFile: string, inCache: boolean) => {
-                if (flags && flags.indexOf('no-cache') >= 0) {
-                    let cacheFile = DownloadCache.getFileFromCache(url);
-                    if (cacheFile && fs.existsSync(cacheFile)) {
-                        if (fs.readFileSync(localFile, 'utf8') === fs.readFileSync(cacheFile, 'utf8')) {
-                            return false;
-                        }
+        await DownloadCache.getFileAsync(HOMEPAGE_JSON_URL, flags, undefined, async (url: string, localFile: string, inCache: boolean) => {
+            if (flags && flags.indexOf('no-cache') >= 0) {
+                let cacheFile = DownloadCache.getFileFromCache(url);
+                if (cacheFile && fs.existsSync(cacheFile)) {
+                    if (fs.readFileSync(localFile, 'utf8') === fs.readFileSync(cacheFile, 'utf8')) {
+                        return false;
                     }
                 }
-
-                let releaseJson = JSON.parse(fs.readFileSync(localFile, 'utf8')) as IReleaseJson;
-
-                return await DownloadCache.getFileAsync(
-                    sformat(GITHUB_WEBINST_ENGINE_URL, releaseJson.latestRelease),
-                    flags,
-                    undefined,
-                    async (url: string, enginePath: string, inCache: boolean) => {
-                        engineInstaller = require(enginePath);
-
-                        await DownloadCache.getFileAsync(
-                            sformat(GITHUB_WEBINST_SOLIDITY_URL, releaseJson.latestRelease),
-                            flags,
-                            undefined,
-                            async (url: string, solcPath: string, inCache: boolean) => {
-                                solcInstaller = require(solcPath);
-                                return true;
-                            }
-                        );
-
-                        return true;
-                    }
-                ) !== undefined;
             }
-        );
+
+            let releaseJson = JSON.parse(fs.readFileSync(localFile, 'utf8')) as IReleaseJson;
+
+            return await DownloadCache.getFileAsync(sformat(GITHUB_WEBINST_ENGINE_URL, releaseJson.latestRelease), flags, undefined, async (url: string, enginePath: string, inCache: boolean) => {
+                engineInstaller = require(enginePath);
+
+                await DownloadCache.getFileAsync(sformat(GITHUB_WEBINST_SOLIDITY_URL, releaseJson.latestRelease), flags, undefined, async (url: string, solcPath: string, inCache: boolean) => {
+                    solcInstaller = require(solcPath);
+                    return true;
+                });
+
+                return true;
+            }) !== undefined;
+        });
 
         if (!engineInstaller || !solcInstaller) {
             throw new Error('Web installer download failed');
         }
 
         return {
-            engineInstaller: engineInstaller,
-            solcInstaller: solcInstaller
+            engineInstaller: engineInstaller, solcInstaller: solcInstaller
         };
+    }
+
+    public isInstallerRunning(): boolean {
+        try {
+            let installDir = apphomeMkdir(APPHOME_NAME_INSTALL);
+
+            if (properLockFile.checkSync(installDir)) {
+                return true;
+            }
+        } catch (exception) {
+        }
+
+        return false;
+    }
+
+    isInstalled(verbose: boolean): boolean {
+        if (this._installDone) {
+            return true;
+        }
+
+        if (!verbose) {
+            return false;
+        }
+
+        try {
+            let installDir = apphomeMkdir(APPHOME_NAME_INSTALL);
+
+            if (properLockFile.checkSync(installDir)) {
+                vscode.window.showInformationMessage(errInstallInProgress);
+            } else {
+                vscode.window.showInformationMessage(errInstallRequiresRestart);
+            }
+        } catch (exception) {
+            vscode.window.showErrorMessage(`${exception}`);
+        }
+
+        return false;
     }
 
     async init(context: vscode.ExtensionContext): Promise<void> {
@@ -103,9 +124,7 @@ class ToolsBase {
 
         DownloadCache.builtinPath = path.join(context.extension.extensionPath, PORTABLE_DIR);
 
-        await this.updateWebInstallers(
-            await ToolsBase.getWebInstallers(['cache-first'])
-        );
+        await this.updateWebInstallers(await ToolsBase.getWebInstallers(['cache-first']));
 
         this.checkForUpdates().then(r => {
         });
@@ -114,24 +133,36 @@ class ToolsBase {
     }
 
     async installEngine(overwrite?: boolean): Promise<void> {
-        await this.installWithProgressBar(
-            'Installing Solidity Debugger engine',
-            this.engine.installAsync.bind(this.engine),
-            overwrite
-        );
+        await this.installWithProgressBar('Installing Solidity Debugger engine', this.engine.installAsync.bind(this.engine), overwrite);
     }
 
     async installSolc(solcVersion: string, overwrite?: boolean): Promise<void> {
-        await this.installWithProgressBar(
-            `Installing Solidity Compiler v${solcVersion}`,
-            this.solidity.installAsync.bind(this.solidity),
-            overwrite,
-            undefined,
-            solcVersion
-        );
+        await this.installWithProgressBar(`Installing Solidity Compiler v${solcVersion}`, this.solidity.installAsync.bind(this.solidity), overwrite, undefined, solcVersion);
+    }
+
+    private static async lock(file: string): Promise<() => Promise<void>>
+    {
+        return properLockFile.lock(file, {stale: 45000});
     }
 
     async install(): Promise<boolean> {
+        let result = false;
+
+        try {
+            let installDir = apphomeMkdir(APPHOME_NAME_INSTALL);
+            let releaseLock = await ToolsBase.lock(installDir);
+
+            result = await this.innerInstall();
+
+            await releaseLock();
+        } catch (e) {
+            console.log(e);
+        }
+
+        return result;
+    }
+
+    private async innerInstall(): Promise<boolean> {
         try {
             if (!(await this.engine.isInstalledAsync())) {
                 await this.installEngine();
@@ -142,21 +173,38 @@ class ToolsBase {
             }
         } catch (e) {
             vscode.window.showErrorMessage(util.format('%s', e));
+            console.log(e);
             return false;
         }
 
+        this._installDone = true;
         return true;
     }
 
     private async checkForUpdates(): Promise<void> {
-        setTimeout(this.checkForUpdates.bind(this), updateIntervalMilliseconds);
+        let releaseLock: any = undefined;
 
         try {
-            await this.updateWebInstallers(
-                await ToolsBase.getWebInstallers(['no-cache'])
-            );
+            let updateDir = apphomeMkdir(APPHOME_NAME_UPDATE);
+            releaseLock = await ToolsBase.lock(updateDir);
+        } catch {
+            releaseLock = undefined;
+        }
+
+        if (releaseLock === undefined) { // locked
+            setTimeout(this.checkForUpdates.bind(this), 500);
+            return;
+        }
+
+        setTimeout(this.checkForUpdates.bind(this), updateIntervalMilliseconds);
+        try {
+            await this.updateWebInstallers(await ToolsBase.getWebInstallers(['no-cache']));
         } catch (e) {
-            // vscode.window.showErrorMessage(`checkForUpdates: ${e}`);
+        }
+
+        try {
+            await releaseLock();
+        } catch {
         }
     }
 
@@ -185,48 +233,33 @@ class ToolsBase {
         }
     }
 
-    private async installWithProgressBar(
-        title: string,
-        installAsync: (options?: WebInstallerOptions) => Promise<void>,
-        overwrite?: boolean,
-        validateAsync?: () => Promise<boolean>,
-        solcVersion?: string,
-    ): Promise<void> {
-        await vscode.window.withProgress(
-            {
-                location: vscode.ProgressLocation.Notification,
-                cancellable: false,
-                title: title
-            },
-            async (progress) => {
-                let prevOp = '';
-                let prevPercent = 0;
-                await installAsync(
-                    {
-                        overwrite: overwrite,
-                        solcVersion: solcVersion,
-                        progressBar: (operation, percent) => {
-                            if (operation !== prevOp) {
-                                // started new operation
-                                prevOp = operation;
-                                prevPercent = percent;
-                                progress.report({increment: percent});
-                            } else if (percent !== prevPercent) {
-                                progress.report({increment: percent - prevPercent});
-                                prevPercent = percent;
-                            }
-                        }
-                    }
-                );
-
-                if (validateAsync) {
-                    progress.report({message: 'Validating'});
-                    if (!(await validateAsync())) {
-                        throw new Error('Failed to execute .NET runtime');
+    private async installWithProgressBar(title: string, installAsync: (options?: WebInstallerOptions) => Promise<void>, overwrite?: boolean, validateAsync?: () => Promise<boolean>, solcVersion?: string,): Promise<void> {
+        await vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification, cancellable: false, title: title
+        }, async (progress) => {
+            let prevOp = '';
+            let prevPercent = 0;
+            await installAsync({
+                overwrite: overwrite, solcVersion: solcVersion, progressBar: (operation, percent) => {
+                    if (operation !== prevOp) {
+                        // started new operation
+                        prevOp = operation;
+                        prevPercent = percent;
+                        progress.report({increment: percent});
+                    } else if (percent !== prevPercent) {
+                        progress.report({increment: percent - prevPercent});
+                        prevPercent = percent;
                     }
                 }
+            });
+
+            if (validateAsync) {
+                progress.report({message: 'Validating'});
+                if (!(await validateAsync())) {
+                    throw new Error('Failed to execute .NET runtime');
+                }
             }
-        );
+        });
     }
 }
 

@@ -9,27 +9,34 @@ export let APPHOME_NAME_ENGINE = 'engine';
 export let APPHOME_NAME_SOLC = 'solc';
 export let APPHOME_NAME_CONFIG = 'config';
 export let APPHOME_NAME_DLCACHE = 'dlcache';
+export let APPHOME_NAME_INSTALL = 'install';
+export let APPHOME_NAME_UPDATE = 'update';
 
-function apphomeInit() {
-    if (!fs.existsSync(APPHOME_PATH)) {
-        fs.mkdirSync(APPHOME_PATH);
+
+function mkdirIfMissing(dirpath: string) {
+    if (fs.existsSync(dirpath)) {
+        return;
+    }
+
+    try {
+        fs.mkdirSync(dirpath);
+    } catch {
+    }
+
+    if (!fs.existsSync(dirpath)) {
+        throw new Error(`cannot mkdir ${dirpath}`);
     }
 }
 
-
 export function apphomeMkdir(dirname: string, innerDir?: string): string {
-    apphomeInit();
+    mkdirIfMissing(APPHOME_PATH);
 
     let dirpath = path.join(APPHOME_PATH, dirname);
-    if (!fs.existsSync(dirpath)) {
-        fs.mkdirSync(dirpath);
-    }
+    mkdirIfMissing(dirpath);
 
     if (innerDir) {
         let innerPath = path.join(dirpath, innerDir);
-        if (!fs.existsSync(innerPath)) {
-            fs.mkdirSync(innerPath);
-        }
+        mkdirIfMissing(innerPath);
         return innerPath;
     }
 

@@ -5,6 +5,7 @@ import {OutputWindow} from "./OutputWindow";
 import * as PromisifyChildProcess from 'promisify-child-process';
 import {Project} from './Project';
 import * as fs from 'fs';
+import {handleNoSdbgProject} from "./CmdDebug";
 
 
 class CmdBuildBase {
@@ -19,9 +20,10 @@ class CmdBuildBase {
     }
 
     private async vscBuild(): Promise<void> {
+        if (!Tools.isInstalled(true)) {return;}
+
         if (!Project.current) {
-            vscode.commands.executeCommand(showSideBarCommandName);
-            OutputWindow.write(errNoOpenProject, true);
+            await handleNoSdbgProject();
             return;
         }
 

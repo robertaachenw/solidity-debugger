@@ -2,6 +2,7 @@ import {APPHOME_NAME_DLCACHE, apphomeMkdir} from "./apphome";
 import {DownloaderConfig, DownloaderReport, NodeJsFileDownloader} from "./Downloader";
 import * as path from 'path';
 import * as fs from 'fs';
+import * as process from 'process';
 import {ProgressBarCallback} from "./common";
 
 const LAST_MODIFIED_JSON = 'lastModified.json';
@@ -90,7 +91,7 @@ class DownloadCacheBase {
 
         let disableHttps = (this.builtinPath !== undefined && fs.existsSync(path.join(this.builtinPath, 'disable.https')));
 
-        let tempBasename = `${new Date().valueOf()}${TEMP_FILE_EXT}`;
+        let tempBasename = `${new Date().valueOf()}${process.hrtime()[1]}${TEMP_FILE_EXT}`;
         let tempFpath = path.join(this._cacheDir, tempBasename);
 
         let serverLastModified: string | undefined = undefined;
