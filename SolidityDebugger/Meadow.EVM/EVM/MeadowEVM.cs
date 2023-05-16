@@ -13,6 +13,8 @@ using Meadow.EVM.Exceptions;
 using Meadow.EVM.Debugging.Coverage;
 using System.Runtime.CompilerServices;
 using Meadow.EVM.Debugging.Tracing;
+using Meadow.Plugin;
+using Meadow.Shared;
 using static Meadow.EVM.Debugging.Coverage.CodeCoverage;
 
 namespace Meadow.EVM
@@ -351,12 +353,16 @@ namespace Meadow.EVM
             State.Configuration.DebugConfiguration.RecordExecutionEnd(this);
         }
 
+        private bool? _executionTrace = null;
+        
         /// <summary>
         /// Executes the next instruction located at the program counter, and advances it accordingly.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void Step()
         {
+            var initialPC = ExecutionState.PC;
+            
             // Verify we're not at the end of the stream
             if (ExecutionState.PC >= Code.Length)
             {
@@ -385,6 +391,22 @@ namespace Meadow.EVM
             var opcodeDescriptor = opcode.GetDescriptor();
             var instruction = opcodeDescriptor.GetInstructionImplementation(this);
 
+            if (_executionTrace == true)
+            {
+                PluginLoader.Default.Svc.Log($"{initialPC:x8} {instruction}");
+            }
+            else if (_executionTrace == null)
+            {
+                try
+                {
+                    _executionTrace = Globals.CurrentContractJson.ExecutionTrace; 
+                }
+                catch
+                {
+                    _executionTrace = false;
+                }
+            }
+            
             // Record our code coverage for this execution.
             CoverageMap?.RecordExecution(instruction.Offset, (ExecutionState.PC - instruction.Offset));
 

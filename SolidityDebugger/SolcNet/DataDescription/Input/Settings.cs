@@ -22,8 +22,8 @@ namespace SolcNet.DataDescription.Input
         /// Version of the EVM to compile for. Affects type checking and code generation. Can be "homestead",
         /// "tangerineWhistle", "spuriousDragon", "byzantium", "constantinople", "petersburg", "istanbul" or "berlin".
         /// </summary>
-        [JsonProperty("evmVersion", Required = Required.DisallowNull)]
-        public EvmVersion EvmVersion { get; set; } = EvmVersion.Berlin;
+        [JsonProperty("evmVersion", NullValueHandling = NullValueHandling.Ignore)]
+        public string? EvmVersion { get; set; }
 
         /// <summary>
         /// Metadata settings (optional)
@@ -74,6 +74,9 @@ namespace SolcNet.DataDescription.Input
         public static readonly EvmVersion Petersburg = "petersburg";
         public static readonly EvmVersion Istanbul = "istanbul";
         public static readonly EvmVersion Berlin = "berlin";
+        public static readonly EvmVersion London = "london";
+        public static readonly EvmVersion Paris = "paris";
+        public static readonly EvmVersion Shanghai = "shanghai";
     }
 
     /// <summary>

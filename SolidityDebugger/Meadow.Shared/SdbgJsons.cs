@@ -69,6 +69,9 @@ namespace Meadow.Shared
         [JsonProperty("solc", Required = Required.Default)]
         public string SolcVersion;
 
+        [JsonProperty("evm", Required = Required.Default)]
+        public string EvmVersion;
+
         [JsonProperty("entryPoint", Required = Required.Default)]
         public string EntryPoint;
         
@@ -89,11 +92,14 @@ namespace Meadow.Shared
         
         [JsonProperty("verbose", Required = Required.Default)]
         public bool Verbose;
+        
+        [JsonProperty("executionTrace", Required = Required.Default)]
+        public bool ExecutionTrace;
     }
 
     public class SdbgProjectJson : SdbgContractJson
     {
-        public static new SdbgProjectJson FromJsonString(string jsonStr)
+        public new static SdbgProjectJson FromJsonString(string jsonStr)
         {
             return JsonConvert.DeserializeObject<SdbgProjectJson>(jsonStr, new JsonSerializerSettings { MissingMemberHandling = MissingMemberHandling.Error });
         }

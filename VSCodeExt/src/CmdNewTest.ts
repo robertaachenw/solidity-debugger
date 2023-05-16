@@ -4,9 +4,7 @@ import {Project} from './Project';
 import {Tools} from "./Tools";
 
 async function AddNewTest(testName: string) {
-    if (!Project.current) {
-        return;
-    }
+    if (!Project.current) {return;}
 
     let solFilePath = Project.current.createNewContract(testName);
     Project.current.selectContract(testName);
@@ -20,6 +18,7 @@ class CmdNewTestBase {
     init(context: vscode.ExtensionContext) {
         this._extension = context;
         vscode.commands.registerCommand(newTestCommandName, async () => {
+            if (Tools.askToUpgrade()) {return;}
             Tools.isInstalled(true);
 
             if (!Project.current) {

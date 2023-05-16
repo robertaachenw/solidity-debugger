@@ -14,10 +14,11 @@ interface ILocalFile {
     basename: string
     fpath: string
     exists: boolean
+    builtin: boolean
 }
 
 class DownloadCacheBase {
-    public builtinPath?: string;
+    private _builtinPath?: string;
     private readonly _cacheDir: string;
     private readonly _lastModifiedJson: string;
 
@@ -28,22 +29,13 @@ class DownloadCacheBase {
         if (!fs.existsSync(this._lastModifiedJson)) {
             fs.writeFileSync(this._lastModifiedJson, '{}');
         }
-
-        this.deleteTempFiles();
     }
 
-    private deleteTempFiles() {
-        try {
-            fs.readdirSync(this._cacheDir).forEach((filename) => {
-                if (filename.endsWith(TEMP_FILE_EXT)) {
-                    try {
-                        fs.unlinkSync(path.join(this._cacheDir, filename));
-                    } catch {
-                    }
-                }
-            });
+    init(builtinPath?: string, deleteTempFiles?: boolean) {
+        this._builtinPath = builtinPath;
 
-        } catch {
+        if (deleteTempFiles) {
+            this.deleteTempFiles();
         }
     }
 
@@ -64,6 +56,47 @@ class DownloadCacheBase {
         }
 
         return fs.readFileSync(fpath, 'utf8');
+    }
+
+    isUrlInCache(url: string): boolean {
+        try {
+            let content = JSON.parse(fs.readFileSync(this._lastModifiedJson, 'utf8'));
+            return (content[url] !== undefined);
+        } catch {
+            return false;
+        }
+    }
+
+    deleteUrlFromCache(url: string): string|undefined {
+        let result: string|undefined = undefined;
+
+        let lastModified = JSON.parse(fs.readFileSync(this._lastModifiedJson, 'utf8'));
+        result = lastModified[url];
+        if (result !== undefined) {
+            lastModified[url] = undefined;
+            fs.writeFileSync(this._lastModifiedJson, JSON.stringify(lastModified, null, 4));
+        }
+
+        return result;
+    }
+
+    insertUrlToCache(url: string, lastModified: string) {
+        this.storeLastModified(url, lastModified);
+    }
+
+    deleteFileFromCache(url: string): boolean {
+        let localFile = this.getLocalFile(url);
+
+        if (localFile.exists) {
+            if (localFile.builtin) {return false;}
+            try {
+                fs.unlinkSync(localFile.fpath);
+            } catch {
+            }
+            return !fs.existsSync(localFile.fpath);
+        }
+
+        return false;
     }
 
     async getFileAsync(url: string, flagsList?: CacheFlag[], progressBar?: ProgressBarCallback, verifyCallback?: (url: string, localFile: string, inCache: boolean) => Promise<boolean>): Promise<string | undefined> {
@@ -89,7 +122,7 @@ class DownloadCacheBase {
             }
         }
 
-        let disableHttps = (this.builtinPath !== undefined && fs.existsSync(path.join(this.builtinPath, 'disable.https')));
+        let disableHttps = (this._builtinPath !== undefined && fs.existsSync(path.join(this._builtinPath, 'disable.https')));
 
         let tempBasename = `${new Date().valueOf()}${process.hrtime()[1]}${TEMP_FILE_EXT}`;
         let tempFpath = path.join(this._cacheDir, tempBasename);
@@ -182,6 +215,21 @@ class DownloadCacheBase {
         return undefined;
     }
 
+    private deleteTempFiles() {
+        try {
+            fs.readdirSync(this._cacheDir).forEach((filename) => {
+                if (filename.endsWith(TEMP_FILE_EXT)) {
+                    try {
+                        fs.unlinkSync(path.join(this._cacheDir, filename));
+                    } catch {
+                    }
+                }
+            });
+
+        } catch {
+        }
+    }
+
     private storeLastModified(url: string, date: string): void {
         let content = JSON.parse(fs.readFileSync(this._lastModifiedJson, 'utf8'));
         content[url] = date;
@@ -202,21 +250,21 @@ class DownloadCacheBase {
         let fpath = path.join(this._cacheDir, basename);
         if (fs.existsSync(fpath)) {
             return {
-                basename: basename, fpath: fpath, exists: true
+                basename: basename, fpath: fpath, exists: true, builtin: false
             };
         }
 
-        if (this.builtinPath) {
-            fpath = path.join(this.builtinPath, basename);
+        if (this._builtinPath) {
+            fpath = path.join(this._builtinPath, basename);
             if (fs.existsSync(fpath)) {
                 return {
-                    basename: basename, fpath: fpath, exists: true
+                    basename: basename, fpath: fpath, exists: true, builtin: true
                 };
             }
         }
 
         return {
-            basename: basename, fpath: path.join(this._cacheDir, basename), exists: false
+            basename: basename, fpath: path.join(this._cacheDir, basename), exists: false, builtin: false
         };
     }
 }

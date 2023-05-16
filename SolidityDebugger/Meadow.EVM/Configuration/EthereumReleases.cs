@@ -45,6 +45,11 @@ namespace Meadow.EVM.Configuration
         Istanbul,
         MuirGlacier,
         Berlin,
+        London,
+        ArrowGlacier,
+        GrayGlacier,
+        Paris,
+        Shanghai,
         Futurama
     }
 }

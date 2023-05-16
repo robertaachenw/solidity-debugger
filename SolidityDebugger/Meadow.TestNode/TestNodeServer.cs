@@ -97,7 +97,7 @@ namespace Meadow.TestNode
             genesisState.CommitChanges();
 
             // Create a configuration where we force the newest implemented version number. (And we provide our genesis state, and it's database so we can resolve items from it).
-            var configuration = new Configuration(genesisState.Configuration.Database, EthereumRelease.Berlin, null, genesisState);
+            var configuration = new Configuration(genesisState.Configuration.Database, EthereumRelease.Shanghai, null, genesisState);
 
             // Set our chain ID
             configuration.ChainID = (EthereumChainID)77;

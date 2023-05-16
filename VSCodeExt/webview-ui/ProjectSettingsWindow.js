@@ -7,10 +7,12 @@ let buttonSave = document.getElementById('buttonSave');
 let buttonApply = document.getElementById('buttonApply');
 let chkBreakOnEntry = document.getElementById('chkBreakOnEntry');
 let chkVerbose = document.getElementById('chkVerbose');
+let chkExecutionTrace = document.getElementById('chkExecutionTrace');
 let chkFork = document.getElementById('chkFork');
 let chkHardhat = document.getElementById('chkHardhat');
 let dropdownContractNames = document.getElementById('dropdownContractNames');
 let dropdownSolVer = document.getElementById('dropdownSolVer');
+let dropdownEvmVer = document.getElementById('dropdownEvmVer');
 let gridPreBuildSteps = document.getElementById('gridPreBuildSteps');
 let gridPreDebugSteps = document.getElementById('gridPreDebugSteps');
 let inputForkBlock = document.getElementById('inputForkBlock');
@@ -32,6 +34,8 @@ let contractNames = [];
 let jsonPack = {};
 let selectedContractJson = {};
 let removeId = 0;
+let soliditySupportedEvms = {};
+const defaultEvm = '(default)';
 
 function setGuiDisabledEx(disableGui) {
     buttonAddTest.disabled = disableGui;
@@ -43,10 +47,12 @@ function setGuiDisabledEx(disableGui) {
     buttonApply.disabled = disableGui;
     chkBreakOnEntry.disabled = disableGui;
     chkVerbose.disabled = disableGui;
+    chkExecutionTrace.disabled = disableGui;
     chkFork.disabled = disableGui;
     chkHardhat.disabled = disableGui;
     dropdownContractNames.disabled = disableGui;
     dropdownSolVer.disabled = disableGui;
+    dropdownEvmVer.disabled = disableGui;
     gridPreBuildSteps.disabled = disableGui;
     gridPreDebugSteps.disabled = disableGui;
     inputForkBlock.disabled = disableGui;
@@ -75,6 +81,28 @@ function onLoad() {
 }
 
 
+function updateEvmDropDown(selectedSolc, selectedEvm) {
+    dropdownEvmVer.innerHTML = `<vscode-option>${defaultEvm}</vscode-option>`;
+
+    let solcSupportedEvms = soliditySupportedEvms[selectedSolc] ?? [];
+
+    let selectedEvmFinal = selectedEvm ?? defaultEvm;
+    if (selectedEvmFinal !== defaultEvm && solcSupportedEvms.length > 0 && solcSupportedEvms.indexOf(selectedEvmFinal) < 0)
+        {selectedEvmFinal = defaultEvm;}
+
+    dropdownEvmVer.innerHTML = `<vscode-option>${selectedEvmFinal}</vscode-option>`;
+
+    if (selectedEvmFinal !== defaultEvm) {
+        dropdownEvmVer.innerHTML += `<vscode-option>${defaultEvm}</vscode-option>`;
+    }
+
+    for (let value of solcSupportedEvms) {
+        if (value === selectedEvmFinal) {continue;}
+        dropdownEvmVer.innerHTML += `<vscode-option>${value}</vscode-option>`;
+    }
+}
+
+
 function loadContract(selectedContractName) {
     let contractJson = jsonPack['contractJsonMerged'][selectedContractName];
     if (!contractJson) {
@@ -89,15 +117,19 @@ function loadContract(selectedContractName) {
     tabCompiler.innerHTML = `Compiling ${selectedContractName}`;
     tabDebugger.innerHTML = `Debugging ${selectedContractName}`;
 
-    if (contractJson['solc']) {
-        dropdownSolVer.innerHTML = `<vscode-option>${contractJson['solc']}</vscode-option>`;
+    dropdownEvmVer.innerHTML = `<vscode-option>${defaultEvm}</vscode-option>`;
+
+    let solcVer = contractJson['solc'];
+    if (solcVer) {
+        updateEvmDropDown(solcVer, contractJson['evm']);
+        dropdownSolVer.innerHTML = `<vscode-option>${solcVer}</vscode-option>`;
     }
 
-    for (let solcVer of solidityVersions) {
-        if (solcVer === contractJson['solc']) {
+    for (let value of solidityVersions) {
+        if (value === solcVer) {
             continue;
         }
-        dropdownSolVer.innerHTML += `<vscode-option>${solcVer}</vscode-option>`;
+        dropdownSolVer.innerHTML += `<vscode-option>${value}</vscode-option>`;
     }
 
     if (contractJson['sourceDirs']) {
@@ -115,6 +147,7 @@ function loadContract(selectedContractName) {
     inputForkBlock.value = (contractJson['fork'] && contractJson['fork']['blockNumber']) ? contractJson['fork']['blockNumber'] : '';
     chkBreakOnEntry.checked = (contractJson['breakOnEntry'] && true);
     chkVerbose.checked = (contractJson['verbose'] && true);
+    chkExecutionTrace.checked = (contractJson['executionTrace'] && true);
     inputEntryPoint.value = contractJson['entryPoint'] ?? '';
 
     chkHardhat.checked = false;
@@ -233,6 +266,16 @@ function guiInit() {
 
     dropdownSolVer.addEventListener("change", () => {
         selectedContractJson['solc'] = dropdownSolVer.value;
+        selectedContractJson['evm'] = undefined;
+        updateEvmDropDown(selectedContractJson['solc'], selectedContractJson['evm']);
+    });
+
+    dropdownEvmVer.addEventListener("change", () => {
+        if (dropdownEvmVer.value !== defaultEvm) {
+            selectedContractJson['evm'] = dropdownEvmVer.value;
+        } else {
+            selectedContractJson['evm'] = undefined;
+        }
     });
 
     inputSourceDirs.addEventListener("change", () => {
@@ -253,6 +296,10 @@ function guiInit() {
 
     chkVerbose.addEventListener('click', () => {
         selectedContractJson['verbose'] = chkVerbose.checked;
+    });
+
+    chkExecutionTrace.addEventListener('click', () => {
+        selectedContractJson['executionTrace'] = chkExecutionTrace.checked;
     });
 
     inputEntryPoint.addEventListener('change', () => {
@@ -360,3 +407,627 @@ function setVSCodeMessageListener() {
 }
 
 window.addEventListener("load", onLoad);
+
+soliditySupportedEvms = {
+    "0.4.21": [
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.4.22": [
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.4.23": [
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.4.24": [
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.4.25": [
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.4.26": [
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.5.0": [
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.5.1": [
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.5.2": [
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.5.3": [
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.5.4": [
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.5.5": [
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.5.6": [
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.5.7": [
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.5.8": [
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.5.9": [
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.5.10": [
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.5.11": [
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.5.12": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.5.13": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.5.14": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.5.15": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.5.16": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.5.17": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.6.0": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.6.1": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.6.2": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.6.3": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.6.4": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.6.5": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.6.6": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.6.7": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.6.8": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.6.9": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.6.10": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.6.11": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.6.12": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.7.0": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.7.1": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.7.2": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.7.3": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.7.4": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.7.5": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.7.6": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.8.0": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.8.1": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.8.2": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.8.3": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.8.4": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.8.5": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.8.6": [
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.8.7": [
+        "london",
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.8.8": [
+        "london",
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.8.9": [
+        "london",
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.8.10": [
+        "london",
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.8.11": [
+        "london",
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.8.12": [
+        "london",
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.8.13": [
+        "london",
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.8.14": [
+        "london",
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.8.15": [
+        "london",
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.8.16": [
+        "london",
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.8.17": [
+        "london",
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.8.18": [
+        "paris",
+        "london",
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.8.19": [
+        "paris",
+        "london",
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ],
+    "0.8.20": [
+        "shanghai",
+        "paris",
+        "london",
+        "berlin",
+        "istanbul",
+        "petersburg",
+        "constantinople",
+        "byzantium",
+        "spuriousDragon",
+        "tangerineWhistle",
+        "homestead"
+    ]
+};

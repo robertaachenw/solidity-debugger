@@ -1,6 +1,12 @@
 import * as vscode from 'vscode';
 import {Tools} from "./Tools";
-import {buildCommandName, errNoOpenProject, errNoSelectedContract, showSideBarCommandName} from "./consts";
+import {
+    buildCommandName,
+    errNoOpenProject,
+    errNoSelectedContract,
+    selectContractCommandName,
+    showSideBarCommandName
+} from "./consts";
 import {OutputWindow} from "./OutputWindow";
 import * as PromisifyChildProcess from 'promisify-child-process';
 import {Project} from './Project';
@@ -15,6 +21,7 @@ class CmdBuildBase {
     init(context: vscode.ExtensionContext) {
         this._extension = context;
         vscode.commands.registerCommand(buildCommandName, async () => {
+            if (Tools.askToUpgrade(buildCommandName)) {return;}
             await this.vscBuild();
         });
     }

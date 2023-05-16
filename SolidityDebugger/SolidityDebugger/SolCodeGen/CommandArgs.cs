@@ -28,6 +28,7 @@ namespace Meadow.SolCodeGen
         // public Version SolcVersion { get; set; }
         
         public string SolcJsPath { get; set; }
+        public string EvmVersion { get; set; }
 
         public int SolcOptimizer { get; set; }
 

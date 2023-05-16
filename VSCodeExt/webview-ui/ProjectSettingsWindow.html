@@ -74,6 +74,16 @@
 
                         <tr>
                             <td>
+                                <p>EVM Version: </p>
+                            </td>
+                            <td>
+                                <vscode-dropdown id="dropdownEvmVer" position="below">
+                                </vscode-dropdown>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
                                 Additional Source Directories:<br>
                                 <i>relative to project root</i>
                             </td>
@@ -174,10 +184,11 @@
                 <td>
                     <table>
                         <tr>
-                            <td><u>Behavior</u></td>
+                            <td><u>Behavior</u><br><br><br><br></td>
                             <td>
                                 <vscode-checkbox id="chkBreakOnEntry">Break On Entry</vscode-checkbox><br>
-                                <vscode-checkbox id="chkVerbose">Show Storage Access (Verbose)</vscode-checkbox>
+                                <vscode-checkbox id="chkVerbose">Show Storage Access (Verbose)</vscode-checkbox><br>
+                                <vscode-checkbox id="chkExecutionTrace">Show EVM Execution Trace (Verbose)</vscode-checkbox>
                             </td>
                         </tr>
 

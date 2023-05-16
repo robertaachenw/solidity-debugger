@@ -30,6 +30,7 @@ namespace Meadow.DebugSolSources
         public int TcpTransportPort { get; private set; } = 0;
 
         public string SolcJsPath { get; private set; } = string.Empty;
+        public string EvmVersion { get; private set; } = string.Empty;
 
         public bool BuildOnly { get; private set; } = false;
         
@@ -69,6 +70,7 @@ namespace Meadow.DebugSolSources
             }
 
             opts.SolcJsPath = SdbgHome.SolcJsPath(contractJson.SolcVersion);
+            opts.EvmVersion = Globals.CurrentContractJson.EvmVersion;
             
             if (!string.IsNullOrEmpty(args.TcpPort))
             {
@@ -90,13 +92,14 @@ namespace Meadow.DebugSolSources
 
             opts.BuildOnly = args.BuildOnly;
             Globals.IsDebuggerAttached = !opts.BuildOnly;
-
+            
             PluginLoader.Default.Svc.Log($"# ProjectPath = {args.SdbgProjectPath}");
             PluginLoader.Default.Svc.Log($"# SolcJsPath = {opts.SolcJsPath}");
-            // PluginLoader.Default.Svc.Log($"# ContractName = {Globals.CurrentContractName}");
-            // PluginLoader.Default.Svc.Log($"# OutputPath = {opts.BuildOutputDir}");
-            
 
+            if (!string.IsNullOrEmpty(opts.EvmVersion))
+            {
+                PluginLoader.Default.Svc.Log($"# EvmVersion = {opts.EvmVersion}");
+            }
             
             return opts;
         }
@@ -144,7 +147,7 @@ namespace Meadow.DebugSolSources
             else
             {
                 opts.SolcJsPath = processArgs.SolcJsPath;
-                var test = new SolcLibPortable(opts.SolcJsPath, ".");
+                var test = new SolcLibPortable(opts.SolcJsPath, ".", string.Empty);
             }
             
             if (!string.IsNullOrEmpty(processArgs.TcpPort))

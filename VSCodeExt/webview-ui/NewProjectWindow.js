@@ -21,11 +21,38 @@ const optionInitHere = "radio-init-here";
 const optionFromExisting = "radio-from-existing";
 const optionFromExample = "radio-from-example";
 
+const inputProjectNameElement = document.getElementById(inputProjectName);
+const chkTemplateMinimalElement = document.getElementById(chkTemplateMinimal);
+const chkTemplateERC20Element = document.getElementById(chkTemplateERC20);
+const chkTemplateHardhatElement = document.getElementById(chkTemplateHardhat);
+const dropDownSolidityVersionElement = document.getElementById(dropDownSolidityVersion);
+const inputProjectPathElement = document.getElementById(inputProjectPath);
+const buttonCreateProjectElement = document.getElementById(buttonCreateProject);
+const buttonBrowseElement = document.getElementById(buttonBrowse);
+const buttonGoBackElement = document.getElementById(buttonGoBack);
+const inputBrowsePathElement = document.getElementById(inputBrowsePath);
+const nextBtnElement = document.getElementById(nextBtn);
+const viewChooseOptionElement = document.getElementById(viewChooseOption);
+const viewCreateProjElement = document.getElementById(viewCreateProj);
+const viewInitHereElement = document.getElementById(viewInitHere);
+const viewInitFromExampleElement = document.getElementById(viewInitFromExample);
+const viewInitFromExistingElement = document.getElementById(viewInitFromExisting);
+const radioChooseOptionElement = document.getElementById(radioChooseOption);
+const optionInitHereElement = document.getElementById(optionInitHere);
+const optionFromExistingElement = document.getElementById(optionFromExisting);
+const optionFromExampleElement = document.getElementById(optionFromExample);
+
 const vscode = acquireVsCodeApi();
 
 let originalDropdownHtml = undefined;
 let solidityVersionsAdded = false;
-var additionalSolidityVersions = [];
+let additionalSolidityVersions = [];
+let initMessage = false;
+let optionInitHereValue = optionInitHereElement.disabled;
+
+inputProjectNameElement.disabled = true;
+radioChooseOptionElement.disabled = true;
+nextBtnElement.disabled = true;
 
 window.addEventListener("load", onLoad);
 
@@ -98,7 +125,6 @@ function onLoad() {
         document.getElementById(viewChooseOption).hidden = false;
     });
 
-
     setVSCodeMessageListener();
 
     vscode.postMessage({
@@ -107,9 +133,9 @@ function onLoad() {
 }
 
 
-function sendGuiContent(sender) {
+function sendGuiContent(senderName) {
     vscode.postMessage({
-        sender: sender,
+        sender: senderName,
         projectName: document.getElementById(inputProjectName).value,
         templateMinimal: document.getElementById(chkTemplateMinimal).checked,
         templateERC20: document.getElementById(chkTemplateERC20).checked,
@@ -124,6 +150,14 @@ function sendGuiContent(sender) {
 
 function setVSCodeMessageListener() {
     window.addEventListener("message", (event) => {
+        if (!initMessage) {
+            initMessage = true;
+            inputProjectNameElement.disabled = false;
+            radioChooseOptionElement.disabled = false;
+            nextBtnElement.disabled = false;
+            optionInitHereElement.disabled = optionInitHereValue;
+        }
+
         if (event.data.currentWorkspaceSolidityVersions !== undefined) {
             if (additionalSolidityVersions.length === 0) {
                 additionalSolidityVersions.push(...event.data.currentWorkspaceSolidityVersions);
@@ -162,4 +196,3 @@ function setVSCodeMessageListener() {
         }
     });
 }
-

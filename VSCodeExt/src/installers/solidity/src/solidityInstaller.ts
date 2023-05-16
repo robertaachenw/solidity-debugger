@@ -43,7 +43,7 @@ export class SolcInstaller implements ISolcInstaller {
     }
 
     async initAsync(extensionPath: string): Promise<void> {
-        DownloadCache.builtinPath = path.join(extensionPath, PORTABLE_DIR);
+        DownloadCache.init(path.join(extensionPath, PORTABLE_DIR));
         await this.getListJson(['cache-first'], true);
     }
 

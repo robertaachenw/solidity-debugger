@@ -45,6 +45,7 @@ namespace Meadow.SolCodeGen
         readonly string _generatedAssemblyDirectory;
         readonly string _namespace;
         readonly string _solcJsPath;
+        readonly string _evmVersion;
         readonly string _solidityCompilerVersion;
         // readonly SolcLib _solcLib;
         private SolcLibPortable _solcLibPortable;
@@ -122,6 +123,7 @@ namespace Meadow.SolCodeGen
             
             _namespace = appArgs.Namespace;
             _solcJsPath = appArgs.SolcJsPath;
+            _evmVersion = appArgs.EvmVersion;
             _solcOptimzer = appArgs.SolcOptimizer;
             _solcLibPortable = SetupSolcLibPortable();
             _solidityCompilerVersion = _solcLibPortable.Version.ToString(3);
@@ -130,7 +132,7 @@ namespace Meadow.SolCodeGen
         SolcLibPortable SetupSolcLibPortable()
         {
             var sourceDir = string.IsNullOrEmpty(_solSourceSingleFile) ? _solSourceDirectory : null;
-            return new SolcLibPortable(_solcJsPath, sourceDir);
+            return new SolcLibPortable(_solcJsPath, sourceDir, _evmVersion);
             
         }
 
@@ -142,28 +144,28 @@ namespace Meadow.SolCodeGen
             bool assemblyAlreadyUpToDate = false;
             var solCodeHashFile = Path.Combine(_generatedAssemblyDirectory, _namespace + ".solcodehash");
 
-            if (File.Exists(solCodeHashFile))
-            {
-                try
-                {
-                    var solCodeHashFileContents = File.ReadAllText(solCodeHashFile, new UTF8Encoding(false, false));
-                    if (solCodeHashFileContents.Trim().Equals(_genResults.SolcCodeBaseHash.Trim(), StringComparison.OrdinalIgnoreCase))
-                    {
-                        assemblyAlreadyUpToDate = true;
-                        _genResults.CompilationResults = new SolCodeGenCompilationResults
-                        {
-                            AssemblyFilePath = Path.Combine(_generatedAssemblyDirectory, _namespace + ".dll"),
-                            PdbFilePath = Path.Combine(_generatedAssemblyDirectory, _namespace + ".pdb"),
-                            XmlDocFilePath = Path.Combine(_generatedAssemblyDirectory, _namespace + ".xml")
-                        };
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger("Exception loading existing assembly for cache checking:");
-                    _logger(ex.ToString());
-                }
-            }
+            // if (File.Exists(solCodeHashFile))
+            // {
+            //     try
+            //     {
+            //         var solCodeHashFileContents = File.ReadAllText(solCodeHashFile, new UTF8Encoding(false, false));
+            //         if (solCodeHashFileContents.Trim().Equals(_genResults.SolcCodeBaseHash.Trim(), StringComparison.OrdinalIgnoreCase))
+            //         {
+            //             assemblyAlreadyUpToDate = true;
+            //             _genResults.CompilationResults = new SolCodeGenCompilationResults
+            //             {
+            //                 AssemblyFilePath = Path.Combine(_generatedAssemblyDirectory, _namespace + ".dll"),
+            //                 PdbFilePath = Path.Combine(_generatedAssemblyDirectory, _namespace + ".pdb"),
+            //                 XmlDocFilePath = Path.Combine(_generatedAssemblyDirectory, _namespace + ".xml")
+            //             };
+            //         }
+            //     }
+            //     catch (Exception ex)
+            //     {
+            //         _logger("Exception loading existing assembly for cache checking:");
+            //         _logger(ex.ToString());
+            //     }
+            // }
 
             if (!assemblyAlreadyUpToDate)
             {

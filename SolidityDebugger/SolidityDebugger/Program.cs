@@ -103,6 +103,7 @@ namespace Meadow.DebugSolSources
             AppOptions opts = AppOptions.ParseProcessArgs(args);
 
             // Compile (or retrieve from cache) the solc data for the solidity sources provided in the app options.
+            PluginLoader.Default.Svc.Log("Compiling solidity sources...");
             GeneratedSolcData generatedSolcData = GetSolcCompilationData(opts);
 
             // Identify the contract to deploy from either the provided app options, or heuristically if none provided. 
@@ -119,7 +120,7 @@ namespace Meadow.DebugSolSources
             // Abi entryFunction = GetContractEntryFunction(opts, entryContract);
             
             // Bootstrap a local test node and rpc client with debugging/tracing enabled.
-            PluginLoader.Default.Svc.Log("Debugger is starting");
+            PluginLoader.Default.Svc.Log("Debugger is starting...");
             using (LocalTestNet localTestNet = await LocalTestNet.Setup())
             {
                 await PerformContractTransactions(localTestNet
@@ -183,7 +184,8 @@ namespace Meadow.DebugSolSources
                 OutputDirectory = opts.SourceOutputDir,
                 AssemblyOutputDirectory = opts.BuildOutputDir,
                 SolSourceDirectory = opts.SolCompilationSourcePath,
-                SolcJsPath = opts.SolcJsPath
+                SolcJsPath = opts.SolcJsPath,
+                EvmVersion = opts.EvmVersion
             };
 
             Shared.Globals.ProjectContractsDir = opts.SolCompilationSourcePath;

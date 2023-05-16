@@ -189,6 +189,10 @@ namespace Meadow.EVM.EVM.Instructions
         [OpcodeDescriptor(typeof(InstructionSelfBalance), "SELFBALANCE", 0, 0, 1, "Get balance of currently executing account")]
         [OpcodeBaseGasCost(EthereumRelease.Istanbul, 5)]
         SELFBALANCE = 0x47,
+        [OpcodeDescriptor(typeof(InstructionBaseFee), "BASEFEE", 0, 0, 1, "Get the base fee")]
+        [OpcodeBaseGasCost(EthereumRelease.London, 2)]
+        BASEFEE = 0x48,
+        
         //#endregion
 
         //#region 50s: Stack, Memory, Storage and Flow Operations
@@ -231,6 +235,10 @@ namespace Meadow.EVM.EVM.Instructions
         //#endregion
 
         //#region 60s & 70s: Push Operations
+        [OpcodeDescriptor(typeof(InstructionPush), "PUSH0", 0, 0, 1, "Place value 0 on stack")]
+        [OpcodeBaseGasCost(EthereumRelease.Shanghai, 2)]
+        PUSH0 = 0x5f,
+        
         [OpcodeDescriptor(typeof(InstructionPush), "PUSH1", 1, 0, 1, "Place 1 byte item on stack")]
         [OpcodeBaseGasCost(EthereumRelease.Frontier, 3)]
         PUSH1 = 0x60,

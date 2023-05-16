@@ -23,6 +23,13 @@ namespace Meadow.EVM.EVM.Instructions.Stack
         /// </summary>
         public InstructionPush(MeadowEVM evm) : base(evm)
         {
+            if (Opcode == InstructionOpcode.PUSH0)
+            {
+                PushData = BigIntegerConverter.GetBigInteger(new byte[]{0x00});
+                PushSize = 1;
+                return;
+            }
+            
             // This class handles multiple push operations (various sizes).
             // The opcodes are linear, so we can calculate the size of the push based off opcode.
             PushSize = (uint)(Opcode - InstructionOpcode.PUSH1) + 1;

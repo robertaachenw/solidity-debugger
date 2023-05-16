@@ -1,4 +1,6 @@
-export const solcVersionDefault = '0.8.17';
+export const solcVersionDefault = '0.8.20';
+
+export const engineVersionFileName = 'engine-version.json';
 
 export const dateFormat = 'YYYY-MM-DD HH:mm:ss';
 export const projectHistoryFile = 'user-project-history.json';
@@ -85,6 +87,7 @@ export interface SetupStep {
 
 export interface ContractJson {
     solc?: string
+    evm?: string
     entryPoint?: string
     sourceDirs?: string[]
     fork?: ContractJsonFork

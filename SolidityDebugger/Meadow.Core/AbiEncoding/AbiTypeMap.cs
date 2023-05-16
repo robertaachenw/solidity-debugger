@@ -4,7 +4,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
-using System.Linq;
 using System.Numerics;
 
 namespace Meadow.Core.AbiEncoding
@@ -164,6 +163,11 @@ namespace Meadow.Core.AbiEncoding
                 return GetSolidityTypeInfo("address");
             }
     
+            if (name.Equals("tuple[]"))
+            {
+                return GetSolidityTypeInfo("address[]");
+            }
+            
             throw new ArgumentException("Unexpected solidity ABI type: " + name, nameof(name));
         }
     }

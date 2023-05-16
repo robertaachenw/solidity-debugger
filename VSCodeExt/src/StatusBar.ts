@@ -1,13 +1,14 @@
 import * as vscode from 'vscode';
 import {
     buildCommandName,
-    debugCommandName,
+    debugCommandName, newProjectCommandName,
     newTestCommandName,
     productName,
     projectSettingsCommandName,
     selectContractCommandName, showSideBarCommandName
 } from './consts';
 import {Project} from './Project';
+import {Tools} from "./Tools";
 
 const statusBarAlignment = vscode.StatusBarAlignment.Left;
 const statusBarPriority = 0x7fffffff;
@@ -121,6 +122,7 @@ class StatusBarBase {
         }
 
         vscode.commands.registerCommand(selectContractCommandName, async () => {
+            if (Tools.askToUpgrade(selectContractCommandName)) {return;}
             await this.vscSelectContract(context);
         });
 

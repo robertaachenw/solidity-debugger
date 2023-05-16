@@ -9,9 +9,14 @@ import {CacheFlag, DownloadCache} from './common/DownloadCache';
 import {
     GITHUB_WEBINST_ENGINE_URL, GITHUB_WEBINST_SOLIDITY_URL, HOMEPAGE_JSON_URL, IReleaseJson, PORTABLE_DIR
 } from './common/hardcodedURLs';
-import {sformat} from './common/common';
+import {sformat, versionToNumber} from './common/common';
 import {WebInstallerOptions} from "./common/IWebInstaller";
-import {errInstallRequiresRestart, errInstallInProgress, updateIntervalMilliseconds} from "./consts";
+import {
+    errInstallRequiresRestart,
+    errInstallInProgress,
+    updateIntervalMilliseconds,
+    showSideBarCommandName, productName
+} from "./consts";
 import {APPHOME_NAME_INSTALL, APPHOME_NAME_UPDATE, apphomeMkdir} from "./common/apphome";
 
 interface WebInstallers {
@@ -25,10 +30,12 @@ class ToolsBase {
     private _solcInstaller?: ISolcInstaller;
     private _installDone: boolean;
     private _init: boolean;
+    private _upgradeDeclined: boolean;
 
     constructor() {
         this._installDone = false;
         this._init = false;
+        this._upgradeDeclined = false;
     }
 
     get engine(): IEngineInstaller {
@@ -122,7 +129,7 @@ class ToolsBase {
     async init(context: vscode.ExtensionContext): Promise<void> {
         this._extension = context;
 
-        DownloadCache.builtinPath = path.join(context.extension.extensionPath, PORTABLE_DIR);
+        DownloadCache.init(path.join(context.extension.extensionPath, PORTABLE_DIR), true);
 
         await this.updateWebInstallers(await ToolsBase.getWebInstallers(['cache-first']));
 
@@ -132,12 +139,69 @@ class ToolsBase {
         this._init = true;
     }
 
-    async installEngine(overwrite?: boolean): Promise<void> {
-        await this.installWithProgressBar('Installing Solidity Debugger engine', this.engine.installAsync.bind(this.engine), overwrite);
+    async installEngine(engineVersion?: string, overwrite?: boolean): Promise<void> {
+        let suffix = '';
+        try {
+            if (engineVersion !== undefined) {
+                suffix = `${engineVersion}`;
+            } else if (this.engine.latestVersion !== undefined) {
+                suffix = `${this.engine.latestVersion}`;
+            }
+        } catch {
+        }
+
+        try {
+            await this.installWithProgressBar(
+                `Installing ${productName} ${suffix}`,
+                this.engine.installAsync.bind(this.engine),
+                overwrite,
+                undefined,
+                undefined,
+                engineVersion);
+        } catch (e) {
+            vscode.window.showErrorMessage(util.format('%s', e));
+            console.log(e);
+        }
     }
 
     async installSolc(solcVersion: string, overwrite?: boolean): Promise<void> {
         await this.installWithProgressBar(`Installing Solidity Compiler v${solcVersion}`, this.solidity.installAsync.bind(this.solidity), overwrite, undefined, solcVersion);
+    }
+
+    askToUpgrade(runCommandIfDeclined?: string): boolean {
+        if (!this.engine) {return false;}
+        if (this._upgradeDeclined) {return false;}
+        let latestVersionStr = this.engine.latestVersion;
+        let currentVersionStr = this.engine.installedVersion;
+        if (!latestVersionStr || !currentVersionStr) {return false;}
+
+        let latestVersion = versionToNumber(latestVersionStr);
+        let currentVersion = versionToNumber(currentVersionStr);
+        
+        if (currentVersion >= latestVersion) {return false;}
+
+        this._upgradeDeclined = true;
+
+        vscode.window.showInformationMessage(`Upgrade ${productName} to version ${latestVersionStr}?`, 'Yes', 'No').then(
+            response => {
+                switch (response) {
+                    case 'Yes':
+                        Tools.installEngine(undefined, true);
+                        break;
+
+                    case 'No':
+                        if (runCommandIfDeclined) {
+                            vscode.commands.executeCommand(runCommandIfDeclined);
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        );
+
+        return true;
     }
 
     private static async lock(file: string): Promise<() => Promise<void>>
@@ -171,6 +235,7 @@ class ToolsBase {
             if (!this.solidity.isInstalled(this.solidity.defaultVersion)) {
                 await this.installSolc(this.solidity.defaultVersion);
             }
+
         } catch (e) {
             vscode.window.showErrorMessage(util.format('%s', e));
             console.log(e);
@@ -233,14 +298,21 @@ class ToolsBase {
         }
     }
 
-    private async installWithProgressBar(title: string, installAsync: (options?: WebInstallerOptions) => Promise<void>, overwrite?: boolean, validateAsync?: () => Promise<boolean>, solcVersion?: string,): Promise<void> {
+    private async installWithProgressBar(
+        title: string,
+        installAsync: (options?: WebInstallerOptions) => Promise<void>,
+        overwrite?: boolean,
+        validateAsync?: () => Promise<boolean>,
+        solcVersion?: string,
+        engineVersion?: string,
+        ): Promise<void> {
         await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification, cancellable: false, title: title
         }, async (progress) => {
             let prevOp = '';
             let prevPercent = 0;
             await installAsync({
-                overwrite: overwrite, solcVersion: solcVersion, progressBar: (operation, percent) => {
+                overwrite: overwrite, solcVersion: solcVersion, engineVersion: engineVersion, progressBar: (operation, percent) => {
                     if (operation !== prevOp) {
                         // started new operation
                         prevOp = operation;

@@ -203,6 +203,11 @@ namespace Meadow.EVM.Configuration
                 EthereumReleaseBlockStart[EthereumRelease.Istanbul] = 9069000;
                 EthereumReleaseBlockStart[EthereumRelease.MuirGlacier] = 9200000;
                 EthereumReleaseBlockStart[EthereumRelease.Berlin] = 12244000;
+                EthereumReleaseBlockStart[EthereumRelease.London] = 12965000;
+                EthereumReleaseBlockStart[EthereumRelease.ArrowGlacier] = 13773000;
+                EthereumReleaseBlockStart[EthereumRelease.GrayGlacier] = 15050000;
+                EthereumReleaseBlockStart[EthereumRelease.Paris] = 15537394;
+                EthereumReleaseBlockStart[EthereumRelease.Shanghai] = 17034870;
                 EthereumReleaseBlockStart[EthereumRelease.Futurama] = EVMDefinitions.UINT256_MAX_VALUE; // Work in progress
             }
             //#endregion

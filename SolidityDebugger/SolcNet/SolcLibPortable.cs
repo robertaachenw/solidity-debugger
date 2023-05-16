@@ -10,6 +10,7 @@ namespace SolcNet
     {
         private string _sourceDir;
         private string _solcJs;
+        private string _evmVersion;
 
         public string VersionDescription { get; }
         
@@ -19,14 +20,16 @@ namespace SolcNet
         {
             return Version.Parse(versionString.Split(new[] { '-', '+' }, 2, StringSplitOptions.RemoveEmptyEntries)[0]);
         }
-        
-        
+
+
         /// <param name="solcWasmPath">soljson-v0.8.9+commit.e5eed63a.js</param>
         /// <param name="sourceDir"></param>
-        public SolcLibPortable(string solcWasmPath, string sourceDir)
+        /// <param name="evmVersion"></param>
+        public SolcLibPortable(string solcWasmPath, string sourceDir, string evmVersion)
         {
             _sourceDir = sourceDir;
             _solcJs = File.ReadAllText(solcWasmPath);
+            _evmVersion = evmVersion;
             
             using var engine = new V8ScriptEngine();
             engine.Execute(_solcJs);
@@ -134,6 +137,11 @@ namespace SolcNet
             if (optimizer != null)
             {
                 inputDesc.Settings.Optimizer = optimizer;
+            }
+
+            if (!string.IsNullOrEmpty(_evmVersion))
+            {
+                inputDesc.Settings.EvmVersion = _evmVersion;
             }
 
             foreach (var filePath in contractFilePaths)

@@ -1,7 +1,13 @@
 import * as vscode from 'vscode';
 import {CancellationToken, DebugConfiguration, ProviderResult, workspace, WorkspaceFolder} from 'vscode';
 import {
-    debugCommandName, errNoOpenProject, hardhatConfigJs, hardhatConfigTs, productName, showSideBarCommandName
+    debugCommandName,
+    errNoOpenProject,
+    hardhatConfigJs,
+    hardhatConfigTs,
+    productName,
+    projectSettingsCommandName,
+    showSideBarCommandName
 } from './consts';
 import {MockDebugSession} from './mockDebug';
 import {FileAccessor} from './mockRuntime';
@@ -97,6 +103,7 @@ async function onDebugSessionTerminated(context: vscode.ExtensionContext, debugS
 
 export function initDebugger(context: vscode.ExtensionContext, factory?: vscode.DebugAdapterDescriptorFactory) {
     context.subscriptions.push(vscode.commands.registerCommand(debugCommandName, async (resource: vscode.Uri) => {
+        if (Tools.askToUpgrade(debugCommandName)) {return;}
         await vscDebug(context, resource);
     }),); // context.subscriptions.push
 

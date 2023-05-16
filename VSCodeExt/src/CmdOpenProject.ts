@@ -30,13 +30,7 @@ class OpenProjectBase {
     }
 
     private static getHtml(webview: Webview, extensionUri: Uri): string {
-        const toolkitUri = OpenProjectBase.getUri(webview, extensionUri, [
-            "node_modules",
-            "@vscode",
-            "webview-ui-toolkit",
-            "dist",
-            "toolkit.js",
-        ]);
+        const toolkitUri = OpenProjectBase.getUri(webview, extensionUri, ["node_modules", "@vscode", "webview-ui-toolkit", "dist", "toolkit.js",]);
         const styleUri = OpenProjectBase.getUri(webview, extensionUri, [resourcesFolder, resourceFileCSS]);
         const newProjectJsUri = OpenProjectBase.getUri(webview, extensionUri, [resourcesFolder, resourceFileJavascript]);
 
@@ -78,7 +72,7 @@ class OpenProjectBase {
 		</head>
 		<body id="webview-body">
 	
-		<h2>Open Existing Target</h2>
+		<h2>Recently Opened Targets</h2>
 		<vscode-divider></vscode-divider>
 		<br>
 
@@ -118,28 +112,21 @@ class OpenProjectBase {
     init(context: vscode.ExtensionContext) {
         this._extension = context;
 
-        vscode.commands.registerCommand(
-            openProjectCommandName,
-            () => {
-                Tools.isInstalled(true);
+        vscode.commands.registerCommand(openProjectCommandName, () => {
+            Tools.askToUpgrade();
+            Tools.isInstalled(true);
 
-                this._window = vscode.window.createWebviewPanel(
-                    newProjectWebViewName,
-                    newProjectTabTitle,
-                    vscode.ViewColumn.One,
-                    {
-                        enableScripts: true,
-                    }
-                );
+            this._window = vscode.window.createWebviewPanel(newProjectWebViewName, newProjectTabTitle, vscode.ViewColumn.One, {
+                enableScripts: true,
+            });
 
-                this._window.title = newProjectTabTitle;
-                this._window.webview.html = OpenProjectBase.getHtml(this._window.webview, context.extensionUri);
+            this._window.title = newProjectTabTitle;
+            this._window.webview.html = OpenProjectBase.getHtml(this._window.webview, context.extensionUri);
 
-                this._window.webview.onDidReceiveMessage((message) => {
-                    this.onMessage(message);
-                });
-            }
-        );
+            this._window.webview.onDidReceiveMessage((message) => {
+                this.onMessage(message);
+            });
+        });
     }
 
     openProject(projectDir: string) {

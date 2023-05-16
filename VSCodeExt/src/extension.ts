@@ -8,8 +8,8 @@ import {CmdNewProject} from './CmdNewProject';
 import {CmdNewTest} from './CmdNewTest';
 import {CmdOpenProject} from './CmdOpenProject';
 import {CmdProjectSettings} from './CmdProjectSettings';
-import {apphomeMkdir, APPHOME_NAME_CONFIG} from "./common/apphome";
-import {DOCS_URL, TUTORIAL_URL} from "./common/hardcodedURLs";
+import {APPHOME_NAME_CONFIG, apphomeMkdir} from "./common/apphome";
+import {DOCS_URL, SOLC_LIST_JSON_URL, TUTORIAL_URL} from "./common/hardcodedURLs";
 import {
     checkForUpdatesCommandName,
     docsCommandName,
@@ -24,6 +24,8 @@ import {Project} from './Project';
 import {ProjectHistory} from './ProjectHistory';
 import {StatusBar} from './StatusBar';
 import {Tools} from './Tools';
+import {DownloadCache} from "./common/DownloadCache";
+
 const open = require('open');
 
 const delayedActivateInterval = 250;
@@ -48,6 +50,9 @@ export async function activate(context: vscode.ExtensionContext) {
             await vscCheckForUpdates(context);
         });
         vscode.commands.registerCommand(docsCommandName, async () => {
+            if (Tools.askToUpgrade(docsCommandName)) {
+                return;
+            }
             await vscShowDocs(context);
         });
         vscode.commands.registerCommand(nopCommandName, async () => {
@@ -140,12 +145,49 @@ function isNewInstall(): boolean {
     return result;
 }
 
-
 async function vscCheckForUpdates(context: vscode.ExtensionContext) {
     if (!Tools.isInstalled(true)) {
         return;
     }
+
     await Tools.install();
+
+    const labelUpdateEngine = `Update ${productName} engine`;
+    const labelUpdateSolc = `Update Solidity Compiler`;
+
+    let qp = vscode.window.createQuickPick();
+    qp.items = [{label: labelUpdateEngine}, {label: labelUpdateSolc}];
+    qp.title = `${productName} Update`;
+    qp.canSelectMany = false;
+
+    let sel: readonly vscode.QuickPickItem[] = [];
+
+    qp.onDidChangeSelection((items) => {
+        sel = items;
+    });
+    qp.onDidAccept(async () => {
+        qp.hide();
+
+        for (let item of sel) {
+            switch (item.label) {
+                case labelUpdateEngine:
+                    await Tools.installEngine(undefined, true);
+                    break;
+
+                case labelUpdateSolc:
+                    try {
+                        DownloadCache.deleteFileFromCache(SOLC_LIST_JSON_URL);
+                        DownloadCache.deleteUrlFromCache(SOLC_LIST_JSON_URL);
+                        await Tools.solidity.initAsync(context.extensionPath);
+                        await Tools.installSolc(Tools.solidity.defaultVersion, true);
+                    } catch (e) {
+                        vscode.window.showErrorMessage(`${e}`);
+                    }
+                    break;
+            }
+        }
+    });
+    qp.show();
 }
 
 

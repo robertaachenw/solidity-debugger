@@ -3,11 +3,11 @@ import * as os from 'os';
 import * as path from 'path';
 import * as util from 'util';
 import * as vscode from "vscode";
-import { Uri, Webview } from "vscode";
-import { CmdOpenProject } from "./CmdOpenProject";
-import { sformat } from "./common/common";
-import { DownloadCache } from "./common/DownloadCache";
-import { ZipExtract } from "./common/extractzip";
+import {Uri, Webview} from "vscode";
+import {CmdOpenProject} from "./CmdOpenProject";
+import {sformat} from "./common/common";
+import {DownloadCache} from "./common/DownloadCache";
+import {ZipExtract} from "./common/extractzip";
 import {
     GITHUB_PROJECT_TEMPLATE_EMPTY_URL,
     GITHUB_PROJECT_TEMPLATE_ERC20_URL,
@@ -16,19 +16,22 @@ import {
     IReleaseJson
 } from "./common/hardcodedURLs";
 import {
+    checkForUpdatesCommandName,
     ContractJson,
     contractJsonFileName,
     contractsDirName,
     entryPointContractName,
-    entryPointContractTemplate, hardhatConfigJs, hardhatConfigTs,
+    entryPointContractTemplate,
+    hardhatConfigJs,
+    hardhatConfigTs,
     newProjectCommandName,
     ProjectJson,
     projectJsonFileName
 } from "./consts";
-import { Project, SdbgProject } from "./Project";
-import { ProjectHistory } from "./ProjectHistory";
-import { StatusBar } from "./StatusBar";
-import { Tools } from "./Tools";
+import {Project, SdbgProject} from "./Project";
+import {ProjectHistory} from "./ProjectHistory";
+import {StatusBar} from "./StatusBar";
+import {Tools} from "./Tools";
 
 const newProjectWebViewName = 'sdbg.newProject.webView';
 const newProjectTabTitle = 'New Project';
@@ -64,9 +67,7 @@ const projectsHomeDir = path.join(os.homedir(), 'SolidityProjects');
 const projectNamePrefix = 'MyContract';
 
 enum CreateProjectLocation {
-    CurrentFolder,
-    ExistingFolder,
-    FromExample
+    CurrentFolder, ExistingFolder, FromExample
 }
 
 interface IGuiContent {
@@ -120,13 +121,7 @@ class NewProjectBase {
     }
 
     private static getHtml(webview: Webview, extensionUri: Uri): string {
-        const toolkitUri = NewProjectBase.getUri(webview, extensionUri, [
-            "node_modules",
-            "@vscode",
-            "webview-ui-toolkit",
-            "dist",
-            "toolkit.js",
-        ]);
+        const toolkitUri = NewProjectBase.getUri(webview, extensionUri, ["node_modules", "@vscode", "webview-ui-toolkit", "dist", "toolkit.js",]);
         const styleUri = NewProjectBase.getUri(webview, extensionUri, [resourcesFolder, resourceFileCSS]);
         const newProjectJsUri = NewProjectBase.getUri(webview, extensionUri, [resourcesFolder, resourceFileJavascript]);
 
@@ -171,8 +166,8 @@ class NewProjectBase {
             <div id="view-init-from-existing" hidden>
                 <label slot="label">New Target from existing Hardhat project: </label>
                 <div style="margin-top: 1rem; display: flex">
-                    <vscode-button id="${buttonBrowse}">Browse</vscode-button>
-                    <vscode-text-field size=64 id="${inputBrowsePath}" disabled></vscode-text-field>      
+                    <vscode-text-field size=64 id="${inputBrowsePath}"></vscode-text-field>      
+                    <vscode-button id="${buttonBrowse}">Select Folder</vscode-button>
                 </div>
             </div>
             <div id="${viewInitFromExample}" hidden>
@@ -233,28 +228,30 @@ class NewProjectBase {
     init(context: vscode.ExtensionContext) {
         this._extension = context;
 
-        vscode.commands.registerCommand(
-            newProjectCommandName,
-            () => {
-                Tools.isInstalled(true);
+        vscode.commands.registerCommand(newProjectCommandName, () => {
+            Tools.askToUpgrade();
+            Tools.isInstalled(true);
 
-                this._window = vscode.window.createWebviewPanel(
-                    newProjectWebViewName,
-                    newProjectTabTitle,
-                    vscode.ViewColumn.One,
-                    {
-                        enableScripts: true,
-                    }
-                );
+            this._window = vscode.window.createWebviewPanel(newProjectWebViewName, newProjectTabTitle, vscode.ViewColumn.One, {
+                enableScripts: true,
+            });
 
-                this._window.title = newProjectTabTitle;
-                this._window.webview.html = NewProjectBase.getHtml(this._window.webview, context.extensionUri);
+            this._window.title = newProjectTabTitle;
+            this._window.webview.html = NewProjectBase.getHtml(this._window.webview, context.extensionUri);
 
-                this._window.webview.onDidReceiveMessage(async (message) => {
-                    await this.onMessage(message);
-                });
-            }
-        );
+            this._window.webview.onDidReceiveMessage(async (message) => {
+                await this.onMessage(message);
+            });
+        });
+    }
+
+    async createFromCurrentHardhatProject(projectName: string) {
+        await this.onMessage({
+            sender: buttonCreateProject,
+            activePanel: radioInitHere,
+            projectName: projectName,
+            solidityVersion: Tools.solidity.defaultVersion
+        });
     }
 
     private setInitialValues() {
@@ -290,7 +287,7 @@ class NewProjectBase {
 
         // check if global json file already exists
         if (fs.existsSync(path.join(projectPath, projectJsonFileName))) {
-            vscode.window.showErrorMessage("Debug target already initialized in this project. use Open Existing Target instead.");
+            vscode.window.showErrorMessage("Debug target already initialized in this project. open through Recently Opened Targets instead.");
             this._window!.dispose();
             this._window = undefined;
             return false;
@@ -330,11 +327,9 @@ class NewProjectBase {
         // update solidity version in project json
         let project = new SdbgProject(projectPath);
         if (project.selectedContractJson) {
-            project.selectedContractJson.update(
-                (content) => {
-                    content.solc = solidityVersion;
-                }
-            );
+            project.selectedContractJson.update((content) => {
+                content.solc = solidityVersion;
+            });
         }
 
         return true;
@@ -440,26 +435,19 @@ class NewProjectBase {
         // download project template
         let templateZipPath: string | undefined = undefined;
 
-        await vscode.window.withProgress(
-            {
-                location: vscode.ProgressLocation.Notification,
-                cancellable: false,
-                title: 'Downloading solidity debugger example'
-            },
-            async (progress) => {
-                let percent = 0;
-                templateZipPath = await DownloadCache.getFileAsync(
-                    templateZipUrl,
-                    ['cache-first'],
-                    (op, newPercent) => {
-                        if (percent !== newPercent) {
-                            progress.report({increment: newPercent - percent});
-                            percent = newPercent;
-                        }
-                    }
-                );
-            }
-        );
+        await vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            cancellable: false,
+            title: 'Downloading solidity debugger example'
+        }, async (progress) => {
+            let percent = 0;
+            templateZipPath = await DownloadCache.getFileAsync(templateZipUrl, ['cache-first'], (op, newPercent) => {
+                if (percent !== newPercent) {
+                    progress.report({increment: newPercent - percent});
+                    percent = newPercent;
+                }
+            });
+        });
 
         if (!templateZipPath) {
             vscode.window.showErrorMessage('Project template download failed');
@@ -469,49 +457,31 @@ class NewProjectBase {
         // extract project template
         fs.mkdirSync(projectPath, {recursive: true});
 
-        await vscode.window.withProgress(
-            {
-                location: vscode.ProgressLocation.Notification,
-                cancellable: false,
-                title: 'Extracting example and installing node modules'
-            },
-            async (progress) => {
-                let zipExtract = new ZipExtract(templateZipPath as string);
-                let percent = 0;
-                await zipExtract.extract(
-                    projectPath as string,
-                    (op, newPercent) => {
-                        if (percent !== newPercent) {
-                            progress.report({increment: newPercent - percent});
-                            percent = newPercent;
-                        }
-                    }
-                );
-            }
-        );
+        await vscode.window.withProgress({
+            location: vscode.ProgressLocation.Notification,
+            cancellable: false,
+            title: 'Extracting example and installing node modules'
+        }, async (progress) => {
+            let zipExtract = new ZipExtract(templateZipPath as string);
+            let percent = 0;
+            await zipExtract.extract(projectPath as string, (op, newPercent) => {
+                if (percent !== newPercent) {
+                    progress.report({increment: newPercent - percent});
+                    percent = newPercent;
+                }
+            });
+        });
 
         // update solidity version in project json
         let project = new SdbgProject(projectPath);
         if (project.selectedContractJson) {
-            project.selectedContractJson.update(
-                (content) => {
-                    content.solc = message.solidityVersion;
-                }
-            );
+            project.selectedContractJson.update((content) => {
+                content.solc = message.solidityVersion;
+            });
         }
 
         // open newly created project
         CmdOpenProject.openProject(projectPath);
-    }
-
-    async createFromCurrentHardhatProject(projectName: string)
-    {
-        await this.onMessage({
-            sender: buttonCreateProject,
-            activePanel: radioInitHere,
-            projectName: projectName,
-            solidityVersion: Tools.solidity.defaultVersion
-        });
     }
 
     /**
@@ -546,23 +516,17 @@ class NewProjectBase {
             }
 
         } else if (message.sender === inputProjectName) {
-            this.updateGui(
-                {
-                    projectPathPlaceHolder: path.join(projectsHomeDir, message.projectName as string)
-                } as IGuiContent
-            );
+            this.updateGui({
+                projectPathPlaceHolder: path.join(projectsHomeDir, message.projectName as string)
+            } as IGuiContent);
         } else if (message.sender === buttonBrowse) {
             const chosenPath = await vscode.window.showOpenDialog({
-                canSelectFolders: true,
-                canSelectFiles: false,
-                title: "Select Existing Hardhat Project"
+                canSelectFolders: true, canSelectFiles: false, title: "Select Existing Hardhat Project"
             });
             if (chosenPath && chosenPath.length > 0) {
-                this.updateGui(
-                    {
-                        browseSelectedPath: chosenPath[0].fsPath
-                    } as IGuiContent
-                );
+                this.updateGui({
+                    browseSelectedPath: chosenPath[0].fsPath
+                } as IGuiContent);
             }
         }
 

@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import {Uri, Webview} from "vscode";
 import * as fs from 'fs';
 import * as path from 'path';
-import {newTestCommandName, ProjectJson, projectSettingsCommandName} from "./consts";
+import {newTestCommandName, openProjectCommandName, ProjectJson, projectSettingsCommandName} from "./consts";
 import {Project} from "./Project";
 import {Tools} from "./Tools";
 
@@ -56,6 +56,7 @@ class ProjectSettingsBase {
         this._extension = context;
 
         vscode.commands.registerCommand(projectSettingsCommandName, () => {
+            Tools.askToUpgrade();
             Tools.isInstalled(true);
 
             this._window = vscode.window.createWebviewPanel(projectSettingsWebViewName, projectSettingsTabTitle, vscode.ViewColumn.One, {
