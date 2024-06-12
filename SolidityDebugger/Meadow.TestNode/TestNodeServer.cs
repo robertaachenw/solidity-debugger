@@ -107,7 +107,10 @@ namespace Meadow.TestNode
 
             // We disable ethash validation so we can process blocks quickly.
             configuration.IgnoreEthashVerification = true;
-
+            
+            // Disable validation contract size
+            configuration.DebugConfiguration.IsContractSizeCheckDisabled = true;
+            
             // Set up our test chain
             TestChain = new TestNodeChain(configuration);
         }
